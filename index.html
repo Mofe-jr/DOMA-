@@ -37,6 +37,8 @@
           <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
           <li><a href="payment.html" class="nav-link">Naira Payment</a></li>
           <li><a href="valuation.html" class="nav-link">Valuation &amp; Budget</a></li>
+          <li><a href="dashboard.html" class="nav-link" id="nav-custom-dash-link" style="display:none;">My Dashboard</a></li>
+          <li><a href="admin.html" class="nav-link" id="nav-admin-link" style="display:none; color: var(--yellow-500); font-weight: 700;">Admin</a></li>
         </ul>
       </nav>
 
@@ -63,41 +65,85 @@
     <!-- ==========================================================================
          Hero Section
          ========================================================================== -->
-    <section class="hero-section">
+    <!-- ==========================================================================
+         Hero Section with Multi-Image Dynamic Carousel & Ken-Burns Zoom
+         ========================================================================== -->
+    <section class="hero-section" id="hero-slider-section">
+      <!-- Multi-image Hero Carousel Background -->
       <div class="hero-background-wrapper">
-        <img src="assets/images/hero_luxury_home.jpg" alt="Nigerian Luxury Home" class="hero-bg-img">
+        <div class="hero-slide active" data-index="0" data-category="house" data-title="Rent luxury houses, modern duplexes &amp; flats" data-subtitle="Nigeria's trusted portal connecting students, families, and business owners directly with KYC-verified estate agents. Discover verified houses in Lekki, Ikoyi, Ikeja GRA and Abuja.">
+          <img src="assets/images/hero_modern_villa.jpg" alt="Ikoyi Waterfront Luxury Mansion in Lagos Nigeria" class="hero-bg-img">
+          <div class="slide-caption-badge">
+            <span class="pulse-dot"></span>
+            <span>📍 Ikoyi Waterfront, Lagos • Verified Luxury Duplexes</span>
+          </div>
+        </div>
+
+        <div class="hero-slide" data-index="1" data-category="student" data-title="Student hostels &amp; campus rooms near gates" data-subtitle="Curated student accommodations within 5-10 minutes walking distance to UNILAG Akoka, UI Agbowo, UNIPORT Choba, and LASU Ojo. Prioritized under ₦300k/year.">
+          <img src="assets/images/hero_student_hostel.jpg" alt="Modern Nigerian Student Hostel Accommodation" class="hero-bg-img">
+          <div class="slide-caption-badge student-badge">
+            <span class="pulse-dot blue"></span>
+            <span>🎓 Student Hostels • UNILAG, UI, UNIPORT, LASU (&lt; ₦300k)</span>
+          </div>
+        </div>
+
+        <div class="hero-slide" data-index="2" data-category="store" data-title="Lease prime retail stores &amp; commercial plazas" data-subtitle="High foot-traffic shopping complexes, road-facing retail boutiques, and plaza storefronts directly from verified property agents with CAC credentials.">
+          <img src="assets/images/hero_commercial_store.jpg" alt="Lekki Palms Luxury Commercial Plaza Storefronts" class="hero-bg-img">
+          <div class="slide-caption-badge gold-badge">
+            <span class="pulse-dot gold"></span>
+            <span>🏪 Lekki Palms Plaza • Prime Commercial Stores To-Let</span>
+          </div>
+        </div>
+
+        <div class="hero-slide" data-index="3" data-category="under-300k" data-title="Affordable self-contains with borehole &amp; power" data-subtitle="Tiled private ensuite rooms, running borehole water, and pre-paid meters for students and young working professionals. Verified budget-friendly under ₦300k.">
+          <img src="assets/images/hero_budget_selfcon.jpg" alt="Affordable Nigerian Self-Contain Apartment with Borehole" class="hero-bg-img">
+          <div class="slide-caption-badge green-badge">
+            <span class="pulse-dot green"></span>
+            <span>💰 Budget Self-Contains • Under ₦300k Guaranteed</span>
+          </div>
+        </div>
+
         <div class="hero-overlay"></div>
       </div>
 
+      <!-- Hero Navigation Arrows -->
+      <button class="hero-arrow-btn prev-btn" id="hero-prev-btn" aria-label="Previous Slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="hero-arrow-btn next-btn" id="hero-next-btn" aria-label="Next Slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+
       <div class="container hero-content">
-        <div class="hero-badge">
+        <div class="hero-badge" id="hero-dynamic-badge">
           <span class="pulse-dot"></span>
-          Nigeria's Premier Real Estate &amp; Store Rental Portal
+          <span id="hero-badge-text">Nigeria's Premier Real Estate &amp; Student Housing Portal</span>
         </div>
 
-        <h1 class="hero-title">
-          Rent houses &amp; stores in Nigeria <br>
-          <span class="gradient-text">directly from verified agents</span>
+        <h1 class="hero-title" id="hero-dynamic-title">
+          Rent houses, student hostels &amp; stores <br>
+          <span class="gradient-text">directly from KYC-verified agents</span>
         </h1>
 
-        <p class="hero-subtitle">
-          The all-in-one portal where Nigerian estate agents register to upload pictures and video tours of houses for rent and retail stores to-let. Completely free of duplicate or fake listings.
+        <p class="hero-subtitle" id="hero-dynamic-subtitle">
+          Nigeria's trusted portal connecting students, families, and business owners directly with KYC-verified estate agents. Discover student accommodations near university campuses and budget-friendly self-contains under ₦300k/year.
         </p>
 
         <!-- Search Bar Routing to listings.html -->
         <div class="search-console">
           <div class="search-tabs">
-            <a href="listings.html?filter=all" class="search-tab active">All Available</a>
-            <a href="listings.html?filter=house" class="search-tab">Houses for Rent</a>
-            <a href="listings.html?filter=store" class="search-tab">Stores to Let</a>
+            <a href="listings.html?filter=all" class="search-tab active" data-filter="all">All Available</a>
+            <a href="listings.html?filter=house" class="search-tab" data-filter="house">Houses for Rent</a>
+            <a href="listings.html?filter=student" class="search-tab" data-filter="student">🎓 Student Housing</a>
+            <a href="listings.html?filter=under-300k" class="search-tab" data-filter="under-300k">💰 Under ₦300k</a>
+            <a href="listings.html?filter=store" class="search-tab" data-filter="store">Stores to Let</a>
             <a href="listings.html#map-container-wrap" class="search-tab">🗺️ Map &amp; Directions</a>
-            <a href="agent-portal.html" class="search-tab">Agent Studio</a>
           </div>
 
           <div class="search-fields-grid">
             <div class="field-wrapper">
-              <label for="home-search-location" class="field-label">Nigerian State / Location</label>
-              <input type="text" id="home-search-location" class="field-input" placeholder="e.g. Lekki, Ikeja, Maitama, Wuse 2, Port Harcourt..." autocomplete="off">
+              <label for="home-search-location" class="field-label">Location, Campus, or State</label>
+              <input type="text" id="home-search-location" class="field-input" placeholder="e.g. UNILAG, Akoka, UI, UNIPORT, Lekki, Ikeja..." autocomplete="off">
             </div>
 
             <div class="field-wrapper">
@@ -105,6 +151,8 @@
               <select id="home-search-category" class="field-select">
                 <option value="all">Any Category</option>
                 <option value="house">House for Rent</option>
+                <option value="student">🎓 Student Hostel / Room</option>
+                <option value="under-300k">💰 Under ₦300k Budget</option>
                 <option value="store">Store / Shop to Let</option>
               </select>
             </div>
@@ -113,10 +161,11 @@
               <label for="home-search-budget" class="field-label">Max Budget (₦)</label>
               <select id="home-search-budget" class="field-select">
                 <option value="any">No Limit</option>
+                <option value="300000">💰 Under ₦300,000 / yr (Student)</option>
+                <option value="600000">Up to ₦600k / yr</option>
                 <option value="1500000">Up to ₦1.5M / yr</option>
-                <option value="3500000">Up to ₦3.5M / yr</option>
+                <option value="5000000">Up to ₦5M / yr</option>
                 <option value="10000000">Up to ₦10M / yr</option>
-                <option value="50000000">₦50M+ / yr</option>
               </select>
             </div>
 
@@ -127,34 +176,160 @@
           </div>
 
           <div class="search-keywords-pills">
-            <a href="listings.html" class="pill-tag selected">Browse Marketplace</a>
-            <a href="agent-portal.html" class="pill-tag">Agent Registration</a>
-            <a href="payment.html" class="pill-tag">Naira Checkout (₦)</a>
-            <a href="valuation.html" class="pill-tag">Rental Yield Calculator</a>
+            <a href="listings.html?filter=student" class="pill-tag selected">🎓 Student Hostels Near Campus</a>
+            <a href="listings.html?filter=under-300k" class="pill-tag">💰 Houses Under ₦300k</a>
+            <a href="listings.html?q=UNILAG" class="pill-tag">UNILAG (Akoka)</a>
+            <a href="listings.html?q=UI" class="pill-tag">UI (Agbowo)</a>
+            <a href="listings.html?q=UNIPORT" class="pill-tag">UNIPORT (Choba)</a>
+            <a href="agent-portal.html" class="pill-tag">Agent KYC Registration</a>
           </div>
         </div>
 
+        <!-- Interactive Slide Thumbnails & Category Selectors -->
+        <div class="hero-thumbnails-bar" id="hero-thumbnails-bar">
+          <button class="hero-thumb-btn active" data-slide="0" aria-label="Slide 1: Luxury Homes">
+            <span class="thumb-icon">🏰</span>
+            <div class="thumb-text">
+              <span class="thumb-title">Luxury Homes</span>
+              <span class="thumb-sub">Lagos &amp; Abuja</span>
+            </div>
+            <div class="thumb-progress"></div>
+          </button>
+
+          <button class="hero-thumb-btn" data-slide="1" aria-label="Slide 2: Student Hostels">
+            <span class="thumb-icon">🎓</span>
+            <div class="thumb-text">
+              <span class="thumb-title">Student Hostels</span>
+              <span class="thumb-sub">&lt; ₦300k Corridors</span>
+            </div>
+            <div class="thumb-progress"></div>
+          </button>
+
+          <button class="hero-thumb-btn" data-slide="2" aria-label="Slide 3: Retail Stores">
+            <span class="thumb-icon">🏪</span>
+            <div class="thumb-text">
+              <span class="thumb-title">Retail Stores</span>
+              <span class="thumb-sub">Commercial Plazas</span>
+            </div>
+            <div class="thumb-progress"></div>
+          </button>
+
+          <button class="hero-thumb-btn" data-slide="3" aria-label="Slide 4: Budget Self-Con">
+            <span class="thumb-icon">💰</span>
+            <div class="thumb-text">
+              <span class="thumb-title">Budget Self-Con</span>
+              <span class="thumb-sub">Verified &amp; Ensuite</span>
+            </div>
+            <div class="thumb-progress"></div>
+          </button>
+        </div>
+
         <div style="display: flex; justify-content: center; gap: 16px; margin-top: 32px; flex-wrap: wrap;">
-          <a href="listings.html" class="btn-primary" style="font-size: 1rem; padding: 13px 28px;">
-            Explore Houses &amp; Stores →
+          <a href="listings.html?filter=student" class="btn-primary" style="font-size: 1rem; padding: 13px 28px;">
+            🎓 Explore Student Housing (&lt; ₦300k) →
           </a>
           <a href="agent-portal.html" class="btn-secondary" style="font-size: 1rem; padding: 13px 28px;">
-            Agent Registration &amp; Upload
+            🛡️ Agent KYC Registration &amp; Upload
           </a>
         </div>
       </div>
     </section>
 
     <!-- ==========================================================================
-         Portal Modules / 3 Pillars (White, Black & Yellow Cards)
+         Visual Category Showcase (New High-Resolution Hero Images)
+         ========================================================================== -->
+    <section class="category-showcase-section">
+      <div class="container">
+        <div class="section-head" style="text-align: center; margin-bottom: 32px;">
+          <span class="section-tag">Visual Discovery</span>
+          <h2 class="section-title">Explore Verified Nigerian Housing by Category</h2>
+          <p class="section-subtitle">
+            Direct connections to accredited Nigerian estate agents with verified CAC, NIN, and physical office inspection.
+          </p>
+        </div>
+
+        <div class="category-showcase-grid">
+          <!-- Card 1: Student Housing -->
+          <a href="listings.html?filter=student" class="cat-card">
+            <div class="cat-card-img-wrap">
+              <img src="assets/images/hero_student_hostel.jpg" alt="Student Accommodations in Nigeria" loading="lazy">
+              <span class="cat-pill blue">🎓 CAMPUS CORRIDORS</span>
+            </div>
+            <div class="cat-card-body">
+              <div class="cat-card-meta">
+                <span class="cat-price">From ₦180,000 / yr</span>
+                <span class="cat-agents">12 Verified Agents</span>
+              </div>
+              <h3 class="cat-card-title">Student Hostels &amp; Self-Contains</h3>
+              <p class="cat-card-desc">Walking distance to UNILAG Akoka, UI Agbowo, UNIPORT Choba, and LASU Ojo. Guaranteed budget under ₦300,000.</p>
+              <span class="cat-card-link">Explore Campus Housing →</span>
+            </div>
+          </a>
+
+          <!-- Card 2: Luxury Homes & Duplexes -->
+          <a href="listings.html?filter=house" class="cat-card">
+            <div class="cat-card-img-wrap">
+              <img src="assets/images/hero_modern_villa.jpg" alt="Luxury Homes &amp; Duplexes in Lagos &amp; Abuja" loading="lazy">
+              <span class="cat-pill yellow">🏰 RESIDENTIAL HOMES</span>
+            </div>
+            <div class="cat-card-body">
+              <div class="cat-card-meta">
+                <span class="cat-price">₦3.5M – ₦18M / yr</span>
+                <span class="cat-agents">24 Verified Agents</span>
+              </div>
+              <h3 class="cat-card-title">Houses, Duplexes &amp; Serviced Flats</h3>
+              <p class="cat-card-desc">Ikoyi, Lekki Phase 1, Victoria Island, Ikeja GRA, and Abuja Wuse 2. 24hr power, swimming pools and gated security.</p>
+              <span class="cat-card-link">Browse Houses for Rent →</span>
+            </div>
+          </a>
+
+          <!-- Card 3: Commercial Stores -->
+          <a href="listings.html?filter=store" class="cat-card">
+            <div class="cat-card-img-wrap">
+              <img src="assets/images/hero_commercial_store.jpg" alt="Commercial Stores &amp; Retail Plazas" loading="lazy">
+              <span class="cat-pill gold">🏪 PRIME COMMERCE</span>
+            </div>
+            <div class="cat-card-body">
+              <div class="cat-card-meta">
+                <span class="cat-price">From ₦2.5M / yr</span>
+                <span class="cat-agents">15 Verified Agents</span>
+              </div>
+              <h3 class="cat-card-title">Commercial Stores &amp; Retail Plazas</h3>
+              <p class="cat-card-desc">High foot-traffic shopping complexes, road-facing boutiques, and plaza spaces in Lekki, Ikeja and Abuja.</p>
+              <span class="cat-card-link">View Commercial Stores →</span>
+            </div>
+          </a>
+
+          <!-- Card 4: Budget Self-Contains Under 300k -->
+          <a href="listings.html?filter=under-300k" class="cat-card">
+            <div class="cat-card-img-wrap">
+              <img src="assets/images/hero_budget_selfcon.jpg" alt="Budget Self-Contains Under ₦300k" loading="lazy">
+              <span class="cat-pill green">💰 UNDER ₦300,000 / YR</span>
+            </div>
+            <div class="cat-card-body">
+              <div class="cat-card-meta">
+                <span class="cat-price">₦180,000 – ₦300,000</span>
+                <span class="cat-agents">18 Verified Agents</span>
+              </div>
+              <h3 class="cat-card-title">Budget Self-Contains &amp; Studios</h3>
+              <p class="cat-card-desc">Affordable homes verified with running borehole water, private ensuite bathrooms, and pre-paid electricity meters.</p>
+              <span class="cat-card-link">View Homes Under ₦300k →</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         Portal Modules / 4 Pillars (White, Black & Yellow Cards)
          ========================================================================== -->
     <section>
       <div class="container">
         <div class="section-head">
-          <span class="section-tag">Dedicated Portal Pages</span>
-          <h2 class="section-title">Everything Built For Nigerian Real Estate</h2>
+          <span class="section-tag">Platform Pillars</span>
+          <h2 class="section-title">Built For Students, Renters &amp; KYC Agents</h2>
           <p class="section-subtitle">
-            Navigate through our dedicated pages engineered specifically for estate agents, property owners, and renters.
+            Engineered specifically for Nigerian students, home seekers, and accredited agents with verifiable identity checks.
           </p>
         </div>
 
@@ -164,46 +339,46 @@
             <div class="feature-icon-wrap">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
             </div>
-            <h4>Houses &amp; Stores Marketplace</h4>
-            <p>A clean marketplace for flats, duplexes, self-contains, and commercial retail shops to-let across Nigeria. Starts empty until verified agents upload.</p>
-            <a href="listings.html" class="btn-outline-yellow" style="margin-top: 18px;">
-              Go to Listings Page →
+            <h4>Houses &amp; Flats for Rent</h4>
+            <p>Verified flats, duplexes, self-contains, and serviced family homes across Lagos, Abuja, Port Harcourt, and Ibadan. Direct contact with verified agents.</p>
+            <a href="listings.html?filter=house" class="btn-outline-yellow" style="margin-top: 18px;">
+              Explore Houses →
             </a>
           </div>
 
           <!-- Pillar 2 -->
           <div class="feature-box">
-            <div class="feature-icon-wrap">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle></svg>
+            <div class="feature-icon-wrap" style="color: #60a5fa;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
-            <h4>Agent Registration &amp; Upload Studio</h4>
-            <p>Accredited agents register with NIN/CAC details, access an active dashboard, and upload high-resolution photos and playable video tours.</p>
-            <a href="agent-portal.html" class="btn-outline-yellow" style="margin-top: 18px;">
-              Enter Agent Portal →
+            <h4>Student Hostels &amp; Under ₦300k</h4>
+            <p>Off-campus accommodation close to UNILAG, UI, LASU, UNIPORT, and YabaTech. Verified student bedspaces and self-contains costing under ₦300k/year.</p>
+            <a href="listings.html?filter=student" class="btn-outline-yellow" style="margin-top: 18px; border-color: #60a5fa; color: #93c5fd;">
+              Student Housing Radar →
             </a>
           </div>
 
           <!-- Pillar 3 -->
           <div class="feature-box">
             <div class="feature-icon-wrap">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
             </div>
-            <h4>Secure Naira (₦) Payment Gateway</h4>
-            <p>Pay agent verification fees (₦5,000), holding inspection deposits, or escrow rent securely via Verve/Mastercard, Providus Bank Transfer, or USSD.</p>
-            <a href="payment.html" class="btn-outline-yellow" style="margin-top: 18px;">
-              Open Payment Gateway →
+            <h4>Agent KYC Onboarding Studio</h4>
+            <p>Agents apply by submitting NIN, CAC registration, and government ID. Unlocks a verified dashboard with full property upload capabilities.</p>
+            <a href="agent-portal.html" class="btn-outline-yellow" style="margin-top: 18px;">
+              Submit Agent KYC →
             </a>
           </div>
 
           <!-- Pillar 4 -->
           <div class="feature-box">
             <div class="feature-icon-wrap">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </div>
-            <h4>Valuation &amp; Rent Budgeting</h4>
-            <p>Data-driven rental estimation algorithm and real-time monthly rent budgeting calculator tailored to Nigeria's high-yield property corridors.</p>
-            <a href="valuation.html" class="btn-outline-yellow" style="margin-top: 18px;">
-              Calculate Rent &amp; Value →
+            <h4>Secure Naira (₦) Escrow Gateway</h4>
+            <p>Pay agent verification fees, holding inspection deposits, or escrow rent securely via Verve/Mastercard, Providus Bank Transfer, or USSD.</p>
+            <a href="payment.html" class="btn-outline-yellow" style="margin-top: 18px;">
+              Open Payment Gateway →
             </a>
           </div>
         </div>
@@ -332,6 +507,7 @@
             <li><a href="agent-portal.html">Upload Listing</a></li>
             <li><a href="payment.html?service=verification">Pay Verification (₦5,000)</a></li>
             <li><a href="payment.html">Naira Escrow</a></li>
+            <li><a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a></li>
           </ul>
         </div>
 
@@ -359,13 +535,18 @@
     </div>
   </footer>
 
+  <!-- Supabase & Cloudinary SDK & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
   <script>
     function handleHomeSearch() {
       const q = document.querySelector('#home-search-location').value.trim();
       const cat = document.querySelector('#home-search-category').value;
-      let url = 'listings.html?filter=' + cat;
+      const budget = document.querySelector('#home-search-budget').value;
+      let url = 'listings.html?filter=' + encodeURIComponent(cat);
       if (q) url += '&q=' + encodeURIComponent(q);
+      if (budget && budget !== 'any') url += '&budget=' + encodeURIComponent(budget);
       window.location.href = url;
     }
   </script>

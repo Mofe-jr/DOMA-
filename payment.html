@@ -31,6 +31,8 @@
           <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
           <li><a href="payment.html" class="nav-link active">Naira Payment</a></li>
           <li><a href="valuation.html" class="nav-link">Valuation &amp; Budget</a></li>
+          <li><a href="dashboard.html" class="nav-link" id="nav-custom-dash-link" style="display:none;">My Dashboard</a></li>
+          <li><a href="admin.html" class="nav-link" id="nav-admin-link" style="display:none; color: var(--yellow-500); font-weight: 700;">Admin</a></li>
         </ul>
       </nav>
 
@@ -53,7 +55,7 @@
     </div>
   </header>
 
-  <main id="maincontent" id="payment-page-container">
+  <main id="payment-page-container" class="main-content">
     <div class="page-header-banner">
       <div class="container">
         <span class="section-tag">Direct Naira Checkout</span>
@@ -274,6 +276,7 @@
             <li><a href="agent-portal.html">Agent Portal</a></li>
             <li><a href="payment.html">Naira Payment</a></li>
             <li><a href="valuation.html">Valuation &amp; Budget</a></li>
+            <li><a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a></li>
           </ul>
         </div>
 
@@ -311,6 +314,8 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

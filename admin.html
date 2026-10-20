@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOMA Admin Console | Agent KYC Verification &amp; Database Moderation</title>
+  <meta name="description" content="Secure administrative command center for DOMA Nigeria. Approve agent KYC credentials, moderate student housing &amp; residential listings, and manage Supabase &amp; Cloudinary settings.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd000'><path d='M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <!-- Supabase CDN Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background: #080808;">
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="index.html" class="brand-logo">
+          <div class="brand-symbol">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </div>
+          <div class="brand-name">DOMA<span style="color: var(--yellow-500);">.ng</span></div>
+        </a>
+        <span style="background: rgba(255, 208, 0, 0.15); color: var(--yellow-500); border: 1px solid rgba(255, 208, 0, 0.4); font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: var(--radius-sm); text-transform: uppercase;">
+          Admin Control Center
+        </span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div id="nav-admin-info" style="display: none; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e;"></span>
+            <span style="font-size: 0.85rem; color: var(--text-white); font-weight: 700;">Super Admin</span>
+          </div>
+          <button id="btn-admin-logout" class="btn-secondary" style="padding: 6px 14px; font-size: 0.82rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+            Sign Out
+          </button>
+        </div>
+
+        <a href="index.html" class="btn-secondary" style="font-size: 0.82rem; padding: 7px 14px;">
+          ← Main Website
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCREEN 1: Admin Login Gate (Visible only when not authenticated) -->
+  <main id="admin-login-screen" class="admin-login-wrapper">
+    <div class="admin-login-card">
+      <div style="text-align: center; margin-bottom: 26px;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 208, 0, 0.15); border: 1px solid var(--yellow-500); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--yellow-500);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 style="font-size: 1.6rem; font-weight: 900; color: var(--text-white); margin-bottom: 6px;">
+          DOMA Administrator Access
+        </h2>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+          Secure management console to approve agent KYC submissions, moderate property listings, and control cloud database sync.
+        </p>
+      </div>
+
+      <!-- Quick Demo Credentials Callout -->
+      <div style="background: rgba(255, 208, 0, 0.08); border: 1px solid rgba(255, 208, 0, 0.25); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 22px;">
+        <div style="font-size: 0.78rem; font-weight: 800; color: var(--yellow-500); margin-bottom: 4px; text-transform: uppercase;">
+          ⚡ Demo Administrator Credentials
+        </div>
+        <div style="font-size: 0.84rem; color: var(--text-white); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <span>Email: <strong style="color: #ffd000;">admin@doma.ng</strong></span>
+          <span>Password: <strong style="color: #ffd000;">admin123</strong></span>
+        </div>
+      </div>
+
+      <form id="admin-login-form">
+        <div class="input-group" style="margin-bottom: 14px;">
+          <label for="admin-email">Administrator Email</label>
+          <input type="email" id="admin-email" class="input-control" required placeholder="admin@doma.ng" value="admin@doma.ng">
+        </div>
+
+        <div class="input-group" style="margin-bottom: 20px;">
+          <label for="admin-password">Secure Password</label>
+          <input type="password" id="admin-password" class="input-control" required placeholder="••••••••" value="admin123">
+        </div>
+
+        <div id="login-error-msg" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 16px; font-weight: 600;">
+          Invalid credentials. Please use the demo credentials above.
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 48px; font-size: 0.95rem;">
+          Authenticate &amp; Open Control Center →
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- SCREEN 2: Admin Dashboard (Only visible when logged in) -->
+  <main id="admin-dashboard-screen" style="display: none; padding: 30px 0 80px;">
+    <div class="container">
+      <!-- Welcome Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h1 style="font-size: 2rem; font-weight: 900; color: var(--text-white); margin-bottom: 6px;">
+            DOMA Compliance &amp; Database Studio
+          </h1>
+          <p style="color: var(--text-secondary); font-size: 0.92rem;">
+            Review Nigerian agent KYC registrations (CAC, NIN, government IDs), approve legitimate agents, and moderate live properties.
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="supabase-status-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 800; background: #141414; border: 1px solid var(--glass-border); color: var(--text-secondary);">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
+            <span>Supabase: Local Cache</span>
+          </span>
+          <span id="cloudinary-status-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 800; background: #141414; border: 1px solid var(--glass-border); color: var(--text-secondary);">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></span>
+            <span>Cloudinary: Local Storage Fallback</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- KPI Statistics Grid -->
+      <div class="admin-kpi-grid">
+        <div class="admin-kpi-card alert">
+          <div class="admin-kpi-label">
+            <span>Pending KYC Approvals</span>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></span>
+          </div>
+          <div class="admin-kpi-num amber" id="kpi-pending-kyc">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Agents awaiting document approval to post</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">
+            <span>Verified KYC Agents</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="admin-kpi-num green" id="kpi-verified-agents">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Accredited agents authorized to upload listings</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">
+            <span>Live Properties &amp; Stores</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          </div>
+          <div class="admin-kpi-num yellow" id="kpi-total-listings">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Active marketplace postings across Nigeria</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">
+            <span>Student &amp; &lt; ₦300k Housing</span>
+            <span style="font-size: 1rem;">🎓</span>
+          </div>
+          <div class="admin-kpi-num" id="kpi-student-budget" style="color: #93c5fd;">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Campus proximity hostels &amp; budget homes</div>
+        </div>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" data-tab="tab-kyc">
+          <span>🪪 Agent KYC Approvals</span>
+          <span id="tab-pending-badge" style="background: #f59e0b; color: #000; font-size: 0.72rem; padding: 2px 6px; border-radius: var(--radius-full); font-weight: 900;">0</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-listings">
+          <span>🏘️ Property Listings Moderation</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-cloud-settings">
+          <span>☁️ Supabase &amp; Cloudinary Settings</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="tab-schema">
+          <span>📜 Database Schema (SQL)</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: AGENT KYC APPROVALS -->
+      <section id="tab-kyc" class="admin-tab-content">
+        <div class="admin-filter-bar">
+          <div class="admin-filter-chips">
+            <button class="admin-chip-btn active" data-filter="all">All Submissions</button>
+            <button class="admin-chip-btn" data-filter="pending">⏳ Action Required (Pending)</button>
+            <button class="admin-chip-btn" data-filter="verified">🟢 Verified Agents</button>
+            <button class="admin-chip-btn" data-filter="rejected">🔴 Rejected</button>
+          </div>
+
+          <div style="position: relative; min-width: 280px;">
+            <input type="text" id="admin-kyc-search" class="input-control" placeholder="Search agent, CAC, NIN, or campus..." style="height: 38px; font-size: 0.85rem; padding-left: 36px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 12px; top: 11px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+        </div>
+
+        <div id="admin-agents-list-container">
+          <!-- Dynamically populated dossier cards -->
+        </div>
+      </section>
+
+      <!-- TAB 2: PROPERTY LISTINGS MODERATION -->
+      <section id="tab-listings" class="admin-tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-white);">
+            Active Marketplace Listings
+          </h3>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            Admins can inspect media tours and remove fraudulent, duplicated, or off-market listings.
+          </div>
+        </div>
+
+        <div id="admin-listings-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px;">
+          <!-- Dynamically populated property moderation cards -->
+        </div>
+      </section>
+
+      <!-- TAB 3: SUPABASE & CLOUDINARY CONFIGURATION -->
+      <section id="tab-cloud-settings" class="admin-tab-content" style="display: none;">
+        <div class="agent-portal-card" style="max-width: 780px; margin: 0 auto;">
+          <div style="margin-bottom: 26px;">
+            <span class="section-tag">Cloud Infrastructure</span>
+            <h3 style="font-size: 1.6rem; font-weight: 900; color: var(--text-white); margin-bottom: 6px;">
+              Supabase Database &amp; Cloudinary CDN Integration
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Connect your live Supabase project to store agents and listings in PostgreSQL with Row Level Security. Connect Cloudinary for instant CDN hosting of high-definition photos and walkthrough videos.
+            </p>
+          </div>
+
+          <form id="admin-cloud-config-form">
+            <!-- Supabase Config Section -->
+            <div style="margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--glass-border);">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; color: #22c55e; font-weight: 900;">
+                  ⚡
+                </div>
+                <h4 style="font-size: 1.1rem; color: var(--text-white); font-weight: 800;">
+                  Supabase Project Credentials
+                </h4>
+              </div>
+
+              <div class="input-group" style="margin-bottom: 14px;">
+                <label for="cfg-supabase-url">Supabase Project URL</label>
+                <input type="url" id="cfg-supabase-url" class="input-control" placeholder="https://yourprojectref.supabase.co">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Find this in Supabase Dashboard &gt; Project Settings &gt; API &gt; Project URL</span>
+              </div>
+
+              <div class="input-group">
+                <label for="cfg-supabase-key">Supabase Public Anon API Key</label>
+                <input type="text" id="cfg-supabase-key" class="input-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Find this in Project Settings &gt; API &gt; Project API keys &gt; anon / public</span>
+              </div>
+            </div>
+
+            <!-- Cloudinary Config Section -->
+            <div style="margin-bottom: 28px;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; color: #3b82f6; font-weight: 900;">
+                  ☁️
+                </div>
+                <h4 style="font-size: 1.1rem; color: var(--text-white); font-weight: 800;">
+                  Cloudinary Media CDN (Photos &amp; Video Walkthroughs)
+                </h4>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="input-group">
+                  <label for="cfg-cloudinary-name">Cloudinary Cloud Name</label>
+                  <input type="text" id="cfg-cloudinary-name" class="input-control" placeholder="e.g. doma-housing-ng">
+                </div>
+
+                <div class="input-group">
+                  <label for="cfg-cloudinary-preset">Unsigned Upload Preset</label>
+                  <input type="text" id="cfg-cloudinary-preset" class="input-control" placeholder="e.g. doma_property_uploads">
+                </div>
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Create an Unsigned upload preset in Cloudinary Settings &gt; Upload &gt; Upload presets (mode: Unsigned).</span>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button type="submit" class="btn-primary" style="flex: 1; height: 48px; justify-content: center;">
+                💾 Save Credentials &amp; Connect Live
+              </button>
+              <button type="button" id="btn-test-connection" class="btn-secondary" style="height: 48px;">
+                🔌 Test Live Supabase Ping
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 4: DATABASE SCHEMA (SQL) -->
+      <section id="tab-schema" class="admin-tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-white);">
+              PostgreSQL / Supabase Table Schema
+            </h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Run this script in your Supabase SQL Editor to initialize the <code>agents</code> and <code>listings</code> tables with RLS and starter seed data.
+            </p>
+          </div>
+
+          <button id="btn-copy-sql" class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px;">
+            📋 Copy SQL Script to Clipboard
+          </button>
+        </div>
+
+        <div class="sql-code-box" id="sql-display-box">-- Loading schema script...</div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Rejection Modal -->
+  <div id="reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #141414; border: 1px solid var(--glass-border); border-radius: var(--radius-lg); max-width: 480px; width: 100%; padding: 28px;">
+      <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-white); margin-bottom: 8px;">
+        Reject Agent KYC Application
+      </h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 16px;">
+        Provide a specific reason for rejection (e.g. CAC number mismatch, NIN invalid, proof of address unverified).
+      </p>
+
+      <div class="input-group" style="margin-bottom: 18px;">
+        <label for="reject-reason-input">Reason for Rejection</label>
+        <textarea id="reject-reason-input" class="input-control" rows="3" placeholder="e.g. The submitted 11-digit NIN did not match NIMC record for this agent name. Please submit valid NIMC slip."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="btn-cancel-reject" class="btn-secondary">Cancel</button>
+        <button id="btn-confirm-reject" class="btn-admin-action btn-admin-reject">Confirm Rejection 🔴</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>&copy; 2026 DOMA Nigeria Real Estate Ltd. Internal Compliance &amp; Admin Panel.</div>
+        <div style="display: flex; gap: 16px;">
+          <a href="index.html" style="color: var(--yellow-500); font-weight: 700;">Marketplace Home</a>
+          <span>•</span>
+          <a href="agent-portal.html" style="color: var(--text-secondary);">Agent Portal</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script>
+    // System Toast Notification Helper
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    let allAgents = [];
+    let allListings = [];
+    let currentAgentFilter = 'all';
+    let rejectingAgentId = null;
+
+    // Authentication Logic
+    const loginScreen = document.getElementById('admin-login-screen');
+    const dashboardScreen = document.getElementById('admin-dashboard-screen');
+    const navAdminInfo = document.getElementById('nav-admin-info');
+    const loginForm = document.getElementById('admin-login-form');
+    const logoutBtn = document.getElementById('btn-admin-logout');
+    const loginError = document.getElementById('login-error-msg');
+
+    function checkAdminAuth() {
+      const token = sessionStorage.getItem('doma_admin_token');
+      if (token === 'admin_authorized_2026') {
+        loginScreen.style.display = 'none';
+        dashboardScreen.style.display = 'block';
+        navAdminInfo.style.display = 'flex';
+        loadAdminData();
+      } else {
+        loginScreen.style.display = 'flex';
+        dashboardScreen.style.display = 'none';
+        navAdminInfo.style.display = 'none';
+      }
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('admin-email').value.trim();
+        const pass = document.getElementById('admin-password').value.trim();
+
+        if (email.toLowerCase() === 'admin@doma.ng' && (pass === 'admin123' || pass === 'doma2026')) {
+          sessionStorage.setItem('doma_admin_token', 'admin_authorized_2026');
+          loginError.style.display = 'none';
+          showToast('Authenticated successfully. Welcome, Super Admin! 🛡️');
+          checkAdminAuth();
+        } else {
+          loginError.style.display = 'block';
+          showToast('Invalid administrator credentials.');
+        }
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('doma_admin_token');
+        showToast('Signed out of Admin Panel.');
+        checkAdminAuth();
+      });
+    }
+
+    // Tab Navigation
+    const tabButtons = document.querySelectorAll('.admin-tab-btn');
+    const tabContents = document.querySelectorAll('.admin-tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.style.display = 'none');
+
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        const targetContent = document.getElementById(target);
+        if (targetContent) targetContent.style.display = 'block';
+      });
+    });
+
+    // Load & Render Admin Data
+    async function loadAdminData() {
+      updateCloudStatusPills();
+      populateCloudSettingsForm();
+      loadSqlSchema();
+
+      // Fetch agents & listings via DOMA_CLOUD service
+      allAgents = await window.DOMA_CLOUD.getAgents();
+      allListings = await window.DOMA_CLOUD.getListings();
+
+      updateKpis();
+      renderAgentsList();
+      renderListingsModeration();
+    }
+
+    function updateKpis() {
+      const pendingCount = allAgents.filter(a => (a.kycStatus || 'pending') === 'pending').length;
+      const verifiedCount = allAgents.filter(a => a.kycStatus === 'verified').length;
+      const totalProps = allListings.length;
+      const studentBudgetCount = allListings.filter(l => l.type === 'student' || (l.price || 0) <= 300000 || (l.campus && l.campus !== 'none')).length;
+
+      document.getElementById('kpi-pending-kyc').textContent = pendingCount;
+      document.getElementById('kpi-verified-agents').textContent = verifiedCount;
+      document.getElementById('kpi-total-listings').textContent = totalProps;
+      document.getElementById('kpi-student-budget').textContent = studentBudgetCount;
+
+      const tabPendingBadge = document.getElementById('tab-pending-badge');
+      if (tabPendingBadge) {
+        tabPendingBadge.textContent = pendingCount;
+        tabPendingBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+      }
+    }
+
+    // Render KYC Dossiers
+    function renderAgentsList() {
+      const container = document.getElementById('admin-agents-list-container');
+      const searchQuery = (document.getElementById('admin-kyc-search')?.value || '').toLowerCase().trim();
+
+      let filtered = allAgents.filter(a => {
+        const status = a.kycStatus || 'pending';
+        if (currentAgentFilter !== 'all' && status !== currentAgentFilter) return false;
+        if (searchQuery) {
+          const matchStr = `${a.name} ${a.agency} ${a.cac} ${a.nin} ${a.campusFocus || ''} ${a.state}`.toLowerCase();
+          return matchStr.includes(searchQuery);
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 48px; background: #111; border-radius: var(--radius-md); border: 1px dashed var(--glass-border); color: var(--text-secondary);">
+            <p style="font-size: 1.1rem; margin-bottom: 6px; color: var(--text-white);">No agent submissions matching filter</p>
+            <p style="font-size: 0.85rem;">Try selecting a different filter chip or clearing the search box.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(agent => {
+        const status = agent.kycStatus || 'pending';
+        let statusBadge = '';
+        if (status === 'verified') {
+          statusBadge = '<span class="badge-status verified">🟢 Verified &amp; Active</span>';
+        } else if (status === 'rejected') {
+          statusBadge = '<span class="badge-status rejected">🔴 Rejected</span>';
+        } else {
+          statusBadge = '<span class="badge-status pending">⏳ Pending Review</span>';
+        }
+
+        const cleanPhone = (agent.phone || '').replace(/[^0-9]/g, '');
+        const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello Agent ${agent.name}, this is DOMA Verification Compliance Team regarding your agent registration.`)}`;
+
+        return `
+          <div class="agent-dossier-card ${status}">
+            <div class="agent-dossier-header">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap;">
+                  <h4 class="agent-dossier-name">${escapeHtml(agent.name)}</h4>
+                  <span style="font-size: 0.75rem; color: var(--yellow-500); font-weight: 800; background: rgba(255,208,0,0.1); padding: 2px 8px; border-radius: 4px;">${escapeHtml(agent.id)}</span>
+                  ${statusBadge}
+                </div>
+                <div class="agent-dossier-agency">${escapeHtml(agent.agency)} • ${escapeHtml(agent.state)}, Nigeria</div>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-admin-action" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                  WhatsApp 💬
+                </a>
+                <a href="mailto:${escapeHtml(agent.email)}" class="btn-admin-action" style="background: #1a1a1a; color: var(--text-white); border: 1px solid var(--glass-border);">
+                  Email ✉️
+                </a>
+              </div>
+            </div>
+
+            <!-- KYC Credentials Grid -->
+            <div class="agent-dossier-fields">
+              <div class="agent-dossier-item">
+                <label>CAC Registration / RC</label>
+                <span style="color: var(--yellow-500); font-family: monospace;">${escapeHtml(agent.cac || 'Unspecified')}</span>
+              </div>
+              <div class="agent-dossier-item">
+                <label>NIN / BVN Number</label>
+                <span style="color: #22c55e; font-family: monospace;">${escapeHtml(agent.nin || 'Unspecified')}</span>
+              </div>
+              <div class="agent-dossier-item">
+                <label>Government ID Document</label>
+                <span>${escapeHtml(agent.idType || 'NIMC Slip')} ${agent.idNumber ? `[${escapeHtml(agent.idNumber)}]` : ''}</span>
+              </div>
+              <div class="agent-dossier-item">
+                <label>Campus / Territory Focus</label>
+                <span style="color: #93c5fd;">🎓 ${escapeHtml(agent.campusFocus || 'General')}</span>
+              </div>
+              <div class="agent-dossier-item" style="grid-column: 1 / -1;">
+                <label>Physical Office Address (Proof of Address)</label>
+                <span>📍 ${escapeHtml(agent.officeAddress || 'Unspecified')}</span>
+              </div>
+              ${agent.rejectionReason ? `
+                <div class="agent-dossier-item" style="grid-column: 1 / -1; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                  <label style="color: #ef4444;">Rejection Reason</label>
+                  <span style="color: #ef4444;">${escapeHtml(agent.rejectionReason)}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Admin Actions Bar -->
+            <div class="agent-dossier-actions">
+              <span style="font-size: 0.78rem; color: var(--text-muted); margin-right: auto;">
+                Applied: ${escapeHtml(agent.registeredAt || 'Recently')}
+              </span>
+              
+              <button class="btn-admin-action btn-admin-toggle" onclick="toggleAgentStatus('${escapeHtml(agent.id)}')">
+                🔄 Toggle Status (Demo)
+              </button>
+
+              ${status !== 'rejected' ? `
+                <button class="btn-admin-action btn-admin-reject" onclick="openRejectModal('${escapeHtml(agent.id)}')">
+                  Reject KYC 🔴
+                </button>
+              ` : ''}
+
+              ${status !== 'verified' ? `
+                <button class="btn-admin-action btn-admin-approve" onclick="approveAgent('${escapeHtml(agent.id)}')">
+                  Approve KYC 🟢
+                </button>
+              ` : `
+                <span style="font-size: 0.8rem; color: #22c55e; font-weight: 700;">✅ Approved to Post Listings</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter Chips Event Listener
+    document.querySelectorAll('.admin-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-chip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentAgentFilter = btn.dataset.filter;
+        renderAgentsList();
+      });
+    });
+
+    // Search Input
+    document.getElementById('admin-kyc-search')?.addEventListener('input', () => {
+      renderAgentsList();
+    });
+
+    // Approve Agent Handler
+    window.approveAgent = async function(agentId) {
+      const updated = await window.DOMA_CLOUD.updateAgentKYC(agentId, 'verified');
+      allAgents = await window.DOMA_CLOUD.getAgents();
+      updateKpis();
+      renderAgentsList();
+      showToast(`Success! Agent ${updated ? updated.name : ''} is KYC Verified 🟢. Their listings can now be published.`);
+    };
+
+    // Reject Modal Handlers
+    window.openRejectModal = function(agentId) {
+      rejectingAgentId = agentId;
+      document.getElementById('reject-reason-input').value = '';
+      document.getElementById('reject-modal').style.display = 'flex';
+    };
+
+    document.getElementById('btn-cancel-reject')?.addEventListener('click', () => {
+      document.getElementById('reject-modal').style.display = 'none';
+      rejectingAgentId = null;
+    });
+
+    document.getElementById('btn-confirm-reject')?.addEventListener('click', async () => {
+      if (!rejectingAgentId) return;
+      const reason = document.getElementById('reject-reason-input').value.trim() || 'Credentials verification could not be completed.';
+      await window.DOMA_CLOUD.updateAgentKYC(rejectingAgentId, 'rejected', reason);
+      document.getElementById('reject-modal').style.display = 'none';
+      rejectingAgentId = null;
+      allAgents = await window.DOMA_CLOUD.getAgents();
+      updateKpis();
+      renderAgentsList();
+      showToast('Agent KYC marked as Rejected 🔴.');
+    });
+
+    // Quick Status Toggle (For Testing / Evaluation)
+    window.toggleAgentStatus = async function(agentId) {
+      const agent = allAgents.find(a => a.id === agentId);
+      if (!agent) return;
+      const newStatus = (agent.kycStatus === 'verified') ? 'pending' : 'verified';
+      await window.DOMA_CLOUD.updateAgentKYC(agentId, newStatus);
+      allAgents = await window.DOMA_CLOUD.getAgents();
+      updateKpis();
+      renderAgentsList();
+      showToast(`Status toggled to: ${newStatus === 'verified' ? 'Verified 🟢' : 'Pending Review ⏳'}`);
+    };
+
+    // Render Listings Moderation Grid
+    function renderListingsModeration() {
+      const container = document.getElementById('admin-listings-grid-container');
+      if (!container) return;
+
+      if (allListings.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #111; border-radius: var(--radius-md); border: 1px dashed var(--glass-border); color: var(--text-secondary);">
+            <p style="font-size: 1.1rem; color: var(--text-white); margin-bottom: 6px;">No live listings in database</p>
+            <p style="font-size: 0.85rem;">Listings uploaded by verified agents will appear here for moderation.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = allListings.map(item => {
+        const isStudent = item.type === 'student';
+        const isBudget = (item.price || 0) <= 300000;
+        let badgeHtml = '';
+        if (isStudent) {
+          badgeHtml = '<span class="card-badge student">🎓 Student Hostel</span>';
+        } else if (item.type === 'store') {
+          badgeHtml = '<span class="card-badge gold">🏪 Store</span>';
+        } else {
+          badgeHtml = '<span class="card-badge">🏠 House</span>';
+        }
+
+        const imgUrl = (item.media && item.media[0] && item.media[0].url) 
+          ? item.media[0].url 
+          : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
+
+        return `
+          <div style="background: #111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 160px; position: relative; background: #1a1a1a;">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;">
+              <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+                ${badgeHtml}
+                ${isBudget ? '<span class="card-badge budget">💰 &lt; ₦300k</span>' : ''}
+              </div>
+            </div>
+
+            <div style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: var(--yellow-500); margin-bottom: 4px;">
+                  ${escapeHtml(item.priceFormatted || '₦' + item.price)} <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(item.period || '')}</span>
+                </div>
+                <h4 style="font-size: 0.95rem; color: var(--text-white); margin-bottom: 6px;">${escapeHtml(item.title)}</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">📍 ${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
+                ${item.campus && item.campus !== 'none' ? `<div style="font-size: 0.78rem; color: #93c5fd; margin-bottom: 10px;">🎓 ${escapeHtml(item.campus)}</div>` : ''}
+                <div style="font-size: 0.75rem; color: var(--text-secondary); padding: 8px; background: #171717; border-radius: 4px; margin-bottom: 12px;">
+                  Agent: <strong>${escapeHtml(item.agentName || 'Agent')}</strong> (${escapeHtml(item.agentAgency || 'DOMA Accredited')})
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                <a href="listings.html" style="font-size: 0.82rem; color: var(--yellow-500); font-weight: 700;">Inspect on Map →</a>
+                <button onclick="adminDeleteListing('${escapeHtml(item.id)}')" style="color: #ef4444; font-size: 0.82rem; font-weight: 700; cursor: pointer; background: transparent; border: none;">
+                  Delete 🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Admin Delete Listing
+    window.adminDeleteListing = async function(listingId) {
+      if (confirm('Are you sure you want to remove this property listing from the platform?')) {
+        await window.DOMA_CLOUD.deleteListing(listingId);
+        allListings = await window.DOMA_CLOUD.getListings();
+        updateKpis();
+        renderListingsModeration();
+        showToast('Listing removed from platform.');
+      }
+    };
+
+    // Cloud Settings Helpers
+    function updateCloudStatusPills() {
+      const spPill = document.getElementById('supabase-status-pill');
+      const clPill = document.getElementById('cloudinary-status-pill');
+
+      if (window.DOMA_CLOUD.isSupabaseConnected()) {
+        spPill.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 6px #22c55e;"></span><span style="color: #22c55e;">Supabase: Connected 🟢</span>';
+      } else {
+        spPill.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span><span>Supabase: Local Cache</span>';
+      }
+
+      if (window.DOMA_CLOUD.isCloudinaryConnected()) {
+        clPill.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 6px #22c55e;"></span><span style="color: #22c55e;">Cloudinary: Active ☁️</span>';
+      } else {
+        clPill.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></span><span>Cloudinary: Local Storage</span>';
+      }
+    }
+
+    function populateCloudSettingsForm() {
+      const cfg = window.DOMA_CLOUD.config;
+      document.getElementById('cfg-supabase-url').value = cfg.supabaseUrl || '';
+      document.getElementById('cfg-supabase-key').value = cfg.supabaseAnonKey || '';
+      document.getElementById('cfg-cloudinary-name').value = cfg.cloudinaryCloudName || '';
+      document.getElementById('cfg-cloudinary-preset').value = cfg.cloudinaryUploadPreset || '';
+    }
+
+    document.getElementById('admin-cloud-config-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const supabaseUrl = document.getElementById('cfg-supabase-url').value.trim();
+      const supabaseAnonKey = document.getElementById('cfg-supabase-key').value.trim();
+      const cloudinaryCloudName = document.getElementById('cfg-cloudinary-name').value.trim();
+      const cloudinaryUploadPreset = document.getElementById('cfg-cloudinary-preset').value.trim();
+
+      window.DOMA_CLOUD.saveConfig({
+        supabaseUrl,
+        supabaseAnonKey,
+        cloudinaryCloudName,
+        cloudinaryUploadPreset
+      });
+
+      updateCloudStatusPills();
+      showToast('Cloud credentials saved successfully! 💾');
+      loadAdminData();
+    });
+
+    document.getElementById('btn-test-connection')?.addEventListener('click', async () => {
+      const url = document.getElementById('cfg-supabase-url').value.trim();
+      const key = document.getElementById('cfg-supabase-key').value.trim();
+
+      if (!url || !key) {
+        showToast('Please enter both Supabase URL and Public Anon Key first.');
+        return;
+      }
+
+      showToast('Testing connection to Supabase...');
+      try {
+        await window.DOMA_CLOUD.testSupabase(url, key);
+        showToast('Connection Successful! Supabase database is active. 🟢');
+      } catch (err) {
+        showToast('Connection failed: ' + err.message);
+      }
+    });
+
+    // Load SQL Schema Script Display
+    async function loadSqlSchema() {
+      const displayBox = document.getElementById('sql-display-box');
+      if (!displayBox) return;
+      try {
+        const resp = await fetch('supabase_schema.sql');
+        if (resp.ok) {
+          const sqlText = await resp.text();
+          displayBox.textContent = sqlText;
+        } else {
+          displayBox.textContent = '-- Schema file ready in workspace: supabase_schema.sql';
+        }
+      } catch (e) {
+        displayBox.textContent = '-- Schema file ready in workspace: supabase_schema.sql';
+      }
+    }
+
+    document.getElementById('btn-copy-sql')?.addEventListener('click', () => {
+      const code = document.getElementById('sql-display-box').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('SQL Schema copied to clipboard! 📋 Paste it into Supabase SQL Editor.');
+      }).catch(() => {
+        showToast('Unable to copy automatically. Please select text manually.');
+      });
+    });
+
+    // Initial Auth Check
+    checkAdminAuth();
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

@@ -31,6 +31,8 @@
           <li><a href="agent-portal.html" class="nav-link active">Agent Portal</a></li>
           <li><a href="payment.html" class="nav-link">Naira Payment</a></li>
           <li><a href="valuation.html" class="nav-link">Valuation &amp; Budget</a></li>
+          <li><a href="dashboard.html" class="nav-link" id="nav-custom-dash-link" style="display:none;">My Dashboard</a></li>
+          <li><a href="admin.html" class="nav-link" id="nav-admin-link" style="display:none; color: var(--yellow-500); font-weight: 700;">Admin</a></li>
         </ul>
       </nav>
 
@@ -66,54 +68,91 @@
       <div class="container">
         <div class="agent-portal-card">
           <!-- Active Agent Dashboard (Shown when logged in) -->
-          <div id="agent-active-dashboard" class="agent-dashboard-bar" style="display: none;">
-            <div class="agent-profile-summary">
-              <div class="agent-avatar-badge" id="agent-badge-initials">AG</div>
-              <div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <h3 style="font-size: 1.3rem; color: var(--text-white); font-weight: 800;" id="agent-display-name">Agent Name</h3>
-                  <span class="agent-status-tag">Verified Agent 🟢</span>
+          <div id="agent-active-dashboard" style="display: none; flex-direction: column; gap: 24px;">
+            <div class="agent-dashboard-bar">
+              <div class="agent-profile-summary">
+                <div class="agent-avatar-badge" id="agent-badge-initials">AG</div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h3 style="font-size: 1.3rem; color: var(--text-white); font-weight: 800;" id="agent-display-name">Agent Name</h3>
+                    <span class="agent-status-tag" id="agent-kyc-status-badge">KYC Verified 🟢</span>
+                  </div>
+                  <p style="font-size: 0.9rem; color: var(--text-secondary);" id="agent-display-agency">Agency • State, Nigeria</p>
                 </div>
-                <p style="font-size: 0.9rem; color: var(--text-secondary);" id="agent-display-agency">Agency • State, Nigeria</p>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-primary" id="btn-open-upload-modal">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>+ Upload Property / Student Hostel</span>
+                </button>
+                <button class="btn-secondary" id="btn-toggle-kyc-status" title="Simulate Admin Verification Approval">
+                  <span>Toggle KYC Status (Demo)</span>
+                </button>
+                <button class="btn-secondary" id="btn-pay-agent-fee">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                  <span>Pay Verification (₦5,000)</span>
+                </button>
+                <button class="btn-secondary" id="btn-agent-logout" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+                  Log Out
+                </button>
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <button class="btn-primary" id="btn-open-upload-modal">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>Upload New Listing</span>
-              </button>
-              <button class="btn-secondary" id="btn-pay-agent-fee">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                <span>Pay Verification Fee (₦5,000)</span>
-              </button>
-              <button class="btn-secondary" id="btn-agent-logout" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
-                Log Out
-              </button>
+            <!-- KYC Credentials Card in Dashboard -->
+            <div class="agent-kyc-grid">
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">Agent ID &amp; License</span>
+                <span class="agent-kyc-val" id="dash-agent-id">AG-10928</span>
+              </div>
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">CAC Reg / Business No.</span>
+                <span class="agent-kyc-val" id="dash-agent-cac">RC 1948201</span>
+              </div>
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">NIN / BVN Verification</span>
+                <span class="agent-kyc-val" id="dash-agent-nin" style="color: #22c55e;">2849•••••12 (Verified ✅)</span>
+              </div>
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">ID Document Type</span>
+                <span class="agent-kyc-val" id="dash-agent-idtype">NIMC National ID Slip</span>
+              </div>
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">Campus &amp; Territory Focus</span>
+                <span class="agent-kyc-val" id="dash-agent-campus" style="color: var(--yellow-500);">UNILAG &amp; Lagos Mainland</span>
+              </div>
+              <div class="agent-kyc-item">
+                <span class="agent-kyc-label">Physical Address / Bill</span>
+                <span class="agent-kyc-val" id="dash-agent-address" style="color: #22c55e;">Utility Verified ✅</span>
+              </div>
             </div>
+
+            <!-- Dynamic KYC Status Alert Banner -->
+            <div id="agent-kyc-alert-banner" style="display: none; padding: 14px 18px; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.5;"></div>
           </div>
 
-          <!-- Registration Form (Shown when not logged in) -->
+          <!-- Registration Form with Complete KYC Submission (Shown when not logged in) -->
           <div id="agent-registration-box">
             <div style="text-align: center; margin-bottom: 34px;">
-              <span class="section-tag">Agent Onboarding</span>
+              <span class="section-tag">Agent Onboarding &amp; KYC Verification</span>
               <h2 style="font-size: 2.1rem; font-weight: 900; color: var(--text-white); margin-bottom: 10px;">
-                Register as a Verified Nigerian Agent
+                Submit Agent KYC &amp; Apply to Post
               </h2>
-              <p style="color: var(--text-secondary); max-width: 620px; margin: 0 auto; font-size: 0.95rem;">
-                Join accredited real estate agents across Lagos, Abuja, Port Harcourt, and Ibadan. Registration enables you to upload photos and videos of houses for rent and commercial stores to-let.
+              <p style="color: var(--text-secondary); max-width: 660px; margin: 0 auto; font-size: 0.95rem;">
+                To protect Nigerian students, renters, and commercial tenants from duplicate and fake listings, accredited agents and property managers must submit Know Your Customer (KYC) credentials.
               </p>
             </div>
 
             <form id="agent-reg-form">
               <div class="agent-form-grid">
+                <!-- Section 1: Business & Contact -->
                 <div class="input-group">
-                  <label for="agent-fullname">Full Name (Agent / Principal)</label>
+                  <label for="agent-fullname">Full Legal Name (Agent / Principal)</label>
                   <input type="text" id="agent-fullname" class="input-control" required placeholder="e.g. Babatunde Adeleke / Chinedu Eze">
                 </div>
 
                 <div class="input-group">
-                  <label for="agent-agency">Agency / Enterprise Business Name</label>
+                  <label for="agent-agency">Agency or Registered Enterprise Name</label>
                   <input type="text" id="agent-agency" class="input-control" required placeholder="e.g. Prime Sanctuary Realtors Ltd">
                 </div>
 
@@ -128,7 +167,7 @@
                 </div>
 
                 <div class="input-group">
-                  <label for="agent-state">Primary State in Nigeria</label>
+                  <label for="agent-state">Primary Operational State</label>
                   <select id="agent-state" class="input-control" required>
                     <option value="Lagos">Lagos State</option>
                     <option value="Abuja">Abuja (FCT)</option>
@@ -144,13 +183,60 @@
                 </div>
 
                 <div class="input-group">
-                  <label for="agent-nin">Agent License, CAC, or NIN Number</label>
-                  <input type="text" id="agent-nin" class="input-control" required placeholder="NIN / CAC BN / LASRERA ID">
+                  <label for="agent-cac">CAC Business Registration / RC Number</label>
+                  <input type="text" id="agent-cac" class="input-control" required placeholder="e.g. RC 1948201 or BN 384729">
+                </div>
+
+                <!-- Section 2: KYC Identity & Document Details -->
+                <div class="input-group">
+                  <label for="agent-nin">National Identification Number (NIN) / BVN</label>
+                  <input type="text" id="agent-nin" class="input-control" required placeholder="11-digit NIN or BVN" maxlength="11">
+                </div>
+
+                <div class="input-group">
+                  <label for="agent-idtype">Government-Issued ID Document Type</label>
+                  <select id="agent-idtype" class="input-control" required>
+                    <option value="NIMC Slip / National ID">NIMC National ID Slip / Smart Card</option>
+                    <option value="Driver's License (FRSC)">FRSC Driver's License</option>
+                    <option value="International Passport">Nigerian International Passport</option>
+                    <option value="Voter's Card (INEC)">INEC Voter's Card (PVC)</option>
+                    <option value="LASRERA Certified ID">LASRERA State License</option>
+                  </select>
+                </div>
+
+                <div class="input-group">
+                  <label for="agent-idnumber">ID Document Serial / License Number</label>
+                  <input type="text" id="agent-idnumber" class="input-control" required placeholder="e.g. A29481920 or FRSC-102948">
+                </div>
+
+                <div class="input-group">
+                  <label for="agent-campus-focus">Campus / University Focus (Student Housing)</label>
+                  <select id="agent-campus-focus" class="input-control">
+                    <option value="General Residential & Commercial">General (Non-Campus Exclusive)</option>
+                    <option value="UNILAG & YabaTech Corridor (Akoka / Yaba)">UNILAG &amp; YabaTech (Akoka, Yaba, Bariga)</option>
+                    <option value="LASU Corridor (Ojo, Iba, Okokomaiko)">LASU (Ojo / Iba Corridor)</option>
+                    <option value="UI & Poly Ibadan Corridor (Agbowo / Bodija)">University of Ibadan (Agbowo, Bodija, Sango)</option>
+                    <option value="UNIPORT Corridor (Choba / Alakahia)">UNIPORT (Choba, Alakahia, Rumuosi)</option>
+                    <option value="FUTA Corridor (Akure)">FUTA (South &amp; North Gate, Akure)</option>
+                    <option value="OAU Corridor (Ile-Ife)">OAU (Campus &amp; Mayfair, Ile-Ife)</option>
+                  </select>
+                </div>
+
+                <div class="input-group form-full-width">
+                  <label for="agent-office-address">Office / Agency Physical Address (Proof of Address)</label>
+                  <input type="text" id="agent-office-address" class="input-control" required placeholder="e.g. Suite 4, Plot 12 Admiralty Way, Lekki Phase 1, Lagos">
+                </div>
+
+                <div class="input-group form-full-width">
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: var(--text-secondary); font-size: 0.88rem;">
+                    <input type="checkbox" required style="accent-color: var(--yellow-500); margin-top: 3px;">
+                    <span>I hereby certify that all submitted KYC documents, NIN, and agency credentials are valid and true under the laws of the Federal Republic of Nigeria. I agree to DOMA's Anti-Fraud and Agent Code of Conduct.</span>
+                  </label>
                 </div>
 
                 <div class="input-group form-full-width">
                   <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 52px; font-size: 1.05rem;">
-                    Complete Registration &amp; Open Upload Studio →
+                    Submit KYC Application &amp; Open Agent Dashboard →
                   </button>
                 </div>
               </div>
@@ -161,41 +247,73 @@
           <div id="agent-upload-studio" style="display: none; margin-top: 40px; border-top: 1px solid var(--glass-border); padding-top: 36px;">
             <div style="margin-bottom: 24px;">
               <span class="section-tag">Upload Studio</span>
-              <h3 style="font-size: 1.6rem; color: var(--text-white); font-weight: 800;">Upload House for Rent or Store to Let</h3>
+              <h3 style="font-size: 1.6rem; color: var(--text-white); font-weight: 800;">Upload House, Student Room, or Store</h3>
               <p style="color: var(--text-secondary); font-size: 0.92rem;">
-                Select category, enter rental price in Naira, and upload pictures or video walkthroughs.
+                Select category (including student accommodations close to campus and properties under ₦300k), enter price in Naira, and upload pictures or video walkthroughs.
               </p>
             </div>
 
             <form class="upload-listing-form">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+              <!-- Category Selector with Student Housing -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
                 <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
                   <input type="radio" name="listing-type" value="house" checked style="accent-color: var(--yellow-500);">
-                  <span style="font-weight: 800; color: var(--text-white);">🏠 House Available for Rent</span>
+                  <span style="font-weight: 800; color: var(--text-white); font-size: 0.9rem;">🏠 House / Flat</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
+                  <input type="radio" name="listing-type" value="student" style="accent-color: var(--yellow-500);">
+                  <span style="font-weight: 800; color: #93c5fd; font-size: 0.9rem;">🎓 Student Hostel</span>
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
                   <input type="radio" name="listing-type" value="store" style="accent-color: var(--yellow-500);">
-                  <span style="font-weight: 800; color: var(--text-white);">🏪 Store / Shop Available to Let</span>
+                  <span style="font-weight: 800; color: var(--yellow-500); font-size: 0.9rem;">🏪 Store to Let</span>
                 </label>
               </div>
 
               <div class="input-group" style="margin-bottom: 14px;">
                 <label>Listing Title</label>
-                <input type="text" name="listing-title" class="input-control" required placeholder="e.g. Newly Renovated 3-Bedroom Flat / Corner Shop in Commercial Plaza">
+                <input type="text" name="listing-title" class="input-control" required placeholder="e.g. Self-Contain 5 Mins to UNILAG Gate / Modern 3-Bedroom Duplex in Lekki">
               </div>
 
               <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 14px;">
                 <div class="input-group">
-                  <label>Rent Price in Naira (₦)</label>
-                  <input type="number" name="listing-price" class="input-control" required placeholder="e.g. 3500000">
+                  <label>Rent Price in Naira (₦) <span style="font-size:0.78rem; color:#22c55e;">(Under ₦300k auto-badges as Budget Friendly)</span></label>
+                  <input type="number" name="listing-price" class="input-control" required placeholder="e.g. 250000">
                 </div>
                 <div class="input-group">
                   <label>Billing Period</label>
                   <select name="listing-period" class="input-control">
                     <option value="/year">Per Year (Annum)</option>
+                    <option value="/semester">Per Academic Semester</option>
                     <option value="/month">Per Month</option>
                     <option value=" (2 Yrs)">2 Years Upfront</option>
                   </select>
+                </div>
+              </div>
+
+              <!-- Campus Proximity Option -->
+              <div style="background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
+                <div style="font-size: 0.88rem; font-weight: 800; color: #93c5fd; margin-bottom: 10px;">
+                  🎓 Student Proximity &amp; School Distance (Optional for Student Housing)
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px;">
+                  <div class="input-group" style="margin-bottom: 0;">
+                    <label style="color: var(--text-secondary); font-size: 0.82rem;">Nearby School / Campus</label>
+                    <select name="listing-campus" class="input-control">
+                      <option value="none">Not Near Campus (General)</option>
+                      <option value="UNILAG (Akoka)">University of Lagos (UNILAG), Akoka</option>
+                      <option value="LASU (Ojo)">Lagos State University (LASU), Ojo</option>
+                      <option value="UI (Ibadan)">University of Ibadan (UI), Agbowo</option>
+                      <option value="UNIPORT (Choba)">University of Port Harcourt (UNIPORT), Choba</option>
+                      <option value="YabaTech">Yaba College of Technology</option>
+                      <option value="FUTA (Akure)">FUTA, Akure</option>
+                      <option value="OAU (Ile-Ife)">OAU, Ile-Ife</option>
+                    </select>
+                  </div>
+                  <div class="input-group" style="margin-bottom: 0;">
+                    <label style="color: var(--text-secondary); font-size: 0.82rem;">Commute / Walking Time</label>
+                    <input type="text" name="listing-campus-dist" class="input-control" placeholder="e.g. 5 mins walk to Gate">
+                  </div>
                 </div>
               </div>
 
@@ -215,23 +333,23 @@
                 </div>
                 <div class="input-group">
                   <label>City / Neighborhood</label>
-                  <input type="text" name="listing-area" class="input-control" required placeholder="e.g. Lekki Phase 1 / Maitama">
+                  <input type="text" name="listing-area" class="input-control" required placeholder="e.g. Akoka / Yaba / Lekki / Wuse 2">
                 </div>
               </div>
 
               <div class="input-group" style="margin-bottom: 14px;">
                 <label>Specific Address / Landmark</label>
-                <input type="text" name="listing-address" class="input-control" required placeholder="e.g. Off Admiralty Way, Lekki Phase 1">
+                <input type="text" name="listing-address" class="input-control" required placeholder="e.g. Saint Finbarr's Road, Akoka / Admiralty Way, Lekki">
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                 <div class="input-group">
-                  <label>Bedrooms / Store Space</label>
-                  <input type="text" name="listing-specs-1" class="input-control" placeholder="e.g. 3 Beds or 60 Sq M">
+                  <label>Bedrooms / Unit Type</label>
+                  <input type="text" name="listing-specs-1" class="input-control" placeholder="e.g. Self-Contain or 3 Beds or 60 Sq M">
                 </div>
                 <div class="input-group">
-                  <label>Bathrooms / Key Feature</label>
-                  <input type="text" name="listing-specs-2" class="input-control" placeholder="e.g. 3 Baths or High Footfall Plaza">
+                  <label>Key Feature / Utilities</label>
+                  <input type="text" name="listing-specs-2" class="input-control" placeholder="e.g. Water &amp; Pre-paid Meter / 24h Light">
                 </div>
               </div>
 
@@ -243,12 +361,15 @@
                   <div style="font-weight: 800; color: var(--text-white); margin-bottom: 4px;">Click or Drag Photos or Videos Here</div>
                   <div style="font-size: 0.8rem; color: var(--text-muted);">Supports PNG, JPG, MP4, WEBM (Pictures or Video tour)</div>
                   <input type="file" class="listing-media-input" accept="image/*,video/*" multiple style="display: none;">
+                  <div class="cloudinary-upload-progress">
+                    <div class="cloudinary-upload-fill"></div>
+                  </div>
                 </div>
                 <div class="media-preview-grid"></div>
               </div>
 
               <div class="input-group" style="margin-bottom: 24px;">
-                <label>Agent Contact / WhatsApp Phone</label>
+                <label>Agent WhatsApp / Phone (Tenants Will Chat You Here)</label>
                 <input type="tel" name="listing-agent-phone" class="input-control" required placeholder="+234 803 123 4567">
               </div>
 
@@ -283,33 +404,62 @@
       </p>
 
       <form class="upload-listing-form">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
           <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
             <input type="radio" name="listing-type" value="house" checked style="accent-color: var(--yellow-500);">
-            <span style="font-weight: 800; color: var(--text-white);">🏠 House for Rent</span>
+            <span style="font-weight: 800; color: var(--text-white); font-size: 0.9rem;">🏠 House / Flat</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
+            <input type="radio" name="listing-type" value="student" style="accent-color: var(--yellow-500);">
+            <span style="font-weight: 800; color: #93c5fd; font-size: 0.9rem;">🎓 Student Hostel</span>
           </label>
           <label style="display: flex; align-items: center; gap: 10px; padding: 14px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer;">
             <input type="radio" name="listing-type" value="store" style="accent-color: var(--yellow-500);">
-            <span style="font-weight: 800; color: var(--text-white);">🏪 Store / Shop to Let</span>
+            <span style="font-weight: 800; color: var(--yellow-500); font-size: 0.9rem;">🏪 Store to Let</span>
           </label>
         </div>
 
         <div class="input-group" style="margin-bottom: 14px;">
           <label>Listing Title</label>
-          <input type="text" name="listing-title" class="input-control" required placeholder="e.g. Modern 3-Bedroom Flat / Corner Shop">
+          <input type="text" name="listing-title" class="input-control" required placeholder="e.g. Modern Student Room near UNILAG / 3-Bed Duplex">
         </div>
 
         <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 14px;">
           <div class="input-group">
-            <label>Rent Price in Naira (₦)</label>
-            <input type="number" name="listing-price" class="input-control" required placeholder="e.g. 2500000">
+            <label>Rent Price in Naira (₦) <span style="font-size:0.75rem; color:#22c55e;">(&lt; ₦300k is Budget Friendly)</span></label>
+            <input type="number" name="listing-price" class="input-control" required placeholder="e.g. 250000">
           </div>
           <div class="input-group">
             <label>Billing Period</label>
             <select name="listing-period" class="input-control">
               <option value="/year">Per Year (Annum)</option>
+              <option value="/semester">Per Semester</option>
               <option value="/month">Per Month</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Campus Proximity Selector -->
+        <div style="background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #93c5fd; margin-bottom: 8px;">
+            🎓 Campus &amp; School Distance (For Student Users)
+          </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+            <div>
+              <select name="listing-campus" class="input-control" style="font-size: 0.85rem;">
+                <option value="none">Not Near Campus (General)</option>
+                <option value="UNILAG (Akoka)">UNILAG, Akoka</option>
+                <option value="LASU (Ojo)">LASU, Ojo</option>
+                <option value="UI (Ibadan)">UI, Agbowo / Bodija</option>
+                <option value="UNIPORT (Choba)">UNIPORT, Choba</option>
+                <option value="YabaTech">YabaTech, Yaba</option>
+                <option value="FUTA (Akure)">FUTA, Akure</option>
+                <option value="OAU (Ile-Ife)">OAU, Ile-Ife</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" name="listing-campus-dist" class="input-control" placeholder="e.g. 5 mins walk to Gate" style="font-size: 0.85rem;">
+            </div>
           </div>
         </div>
 
@@ -325,13 +475,13 @@
           </div>
           <div class="input-group">
             <label>City / Neighborhood</label>
-            <input type="text" name="listing-area" class="input-control" required placeholder="e.g. Lekki Phase 1">
+            <input type="text" name="listing-area" class="input-control" required placeholder="e.g. Akoka / Lekki / Wuse 2">
           </div>
         </div>
 
         <div class="input-group" style="margin-bottom: 14px;">
           <label>Specific Address / Landmark</label>
-          <input type="text" name="listing-address" class="input-control" required placeholder="e.g. Admiralty Way, Lekki">
+          <input type="text" name="listing-address" class="input-control" required placeholder="e.g. Off St Finbarrs Road, Akoka">
         </div>
 
         <div class="input-group" style="margin-bottom: 14px;">
@@ -340,6 +490,9 @@
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2" style="margin: 0 auto 10px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <div style="font-weight: 800; color: var(--text-white); margin-bottom: 4px;">Select Photos or Videos</div>
             <input type="file" class="listing-media-input" accept="image/*,video/*" multiple style="display: none;">
+            <div class="cloudinary-upload-progress">
+              <div class="cloudinary-upload-fill"></div>
+            </div>
           </div>
           <div class="media-preview-grid"></div>
         </div>
@@ -388,6 +541,7 @@
             <li><a href="agent-portal.html">Agent Registration</a></li>
             <li><a href="payment.html?service=verification">Verification (₦5,000)</a></li>
             <li><a href="listings.html">Marketplace</a></li>
+            <li><a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a></li>
           </ul>
         </div>
 
@@ -414,6 +568,9 @@
     </div>
   </footer>
 
+  <!-- Supabase & Cloudinary SDK & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
