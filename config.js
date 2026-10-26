@@ -1,666 +1,362 @@
 /**
  * DOMA.ng - Cloud Infrastructure & Database Configuration
  * Supabase (PostgreSQL Database & Auth) & Cloudinary (CDN Media Delivery)
+ *
+ * The anon key is designed to be public. What protects the data is the Row Level
+ * Security in supabase_schema.sql, so every permission check that matters happens
+ * in the database, not in this file.
  */
 
-const DEFAULT_CLOUD_CONFIG = {
+const DOMA_CONFIG = Object.freeze({
   supabaseUrl: 'https://uwbbdwydadolmoffmwky.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3YmJkd3lkYWRvbG1vZmZtd2t5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDQwODcsImV4cCI6MjEwODAyMDA4N30.TzHBgqVz68-_h8ePF6-qkf6u1BfsJC9UwEfWD-MbyuA',
+  // Use a *signed* or tightly restricted upload preset in production.
   cloudinaryCloudName: '',
   cloudinaryUploadPreset: ''
-};
+});
 
-// Seed default agents for local storage fallback if database is not connected
-const SEED_AGENTS = [
-  {
-    id: 'AG-10928',
-    name: 'Babatunde Adeleke',
-    agency: 'Prime Sanctuary Realtors',
-    phone: '+2348031234567',
-    email: 'babatunde@realty.ng',
-    state: 'Lagos',
-    cac: 'RC 1948201',
-    nin: '28491028412',
-    idType: 'NIMC National ID Slip',
-    idNumber: 'NIMC-2849102',
-    campusFocus: 'UNILAG & YabaTech Corridor (Akoka / Yaba)',
-    officeAddress: 'Suite 4, 12 Commercial Avenue, Sabo, Yaba, Lagos',
-    kycStatus: 'verified',
-    registeredAt: '10/12/2026'
-  },
-  {
-    id: 'AG-48201',
-    name: 'Chinedu Eze',
-    agency: 'Student Nest Properties NG',
-    phone: '+2348029988776',
-    email: 'chinedu@studentnest.ng',
-    state: 'Lagos',
-    cac: 'BN 3847291',
-    nin: '59381920481',
-    idType: "Driver's License (FRSC)",
-    idNumber: 'FRSC-892019A',
-    campusFocus: 'LASU Corridor (Ojo, Iba, Okokomaiko)',
-    officeAddress: 'Plot 18 Badagry Expressway, Iba Town, Lagos',
-    kycStatus: 'verified',
-    registeredAt: '10/14/2026'
-  },
-  {
-    id: 'AG-77391',
-    name: 'Fatima Ibrahim',
-    agency: 'Capital Haven Estates',
-    phone: '+2348055543210',
-    email: 'fatima@capitalhaven.ng',
-    state: 'Abuja',
-    cac: 'RC 8392019',
-    nin: '83920182940',
-    idType: 'Nigerian International Passport',
-    idNumber: 'A10294819',
-    campusFocus: 'General Residential & Commercial',
-    officeAddress: 'Plot 402 Aminu Kano Crescent, Wuse 2, Abuja',
-    kycStatus: 'pending',
-    registeredAt: '10/18/2026'
-  },
-  {
-    id: 'AG-33910',
-    name: 'Olumide Bakare',
-    agency: 'Ibadan Youth Housing Hub',
-    phone: '+2348091122334',
-    email: 'bakare@ibadanhub.ng',
-    state: 'Oyo',
-    cac: 'BN 9920182',
-    nin: '10293847561',
-    idType: "Voter's Card (INEC)",
-    idNumber: 'INEC-OYO-39102',
-    campusFocus: 'UI & Poly Ibadan Corridor (Agbowo / Bodija)',
-    officeAddress: '15 Agbowo Shopping Complex, UI Road, Ibadan',
-    kycStatus: 'verified',
-    registeredAt: '10/16/2026'
-  }
-];
+function mapProfile(p) {
+  return {
+    id: p.id,
+    email: p.email,
+    fullName: p.full_name || '',
+    role: p.role,
+    phone: p.phone || '',
+    state: p.state || '',
+    university: p.university || null,
+    targetBudget: p.target_budget !== null && p.target_budget !== undefined ? Number(p.target_budget) : null,
+    preferredType: p.preferred_type || null,
+    preferredArea: p.preferred_area || null,
+    agency: p.agency || null,
+    joinedAt: p.created_at ? new Date(p.created_at).toLocaleDateString() : ''
+  };
+}
 
-// Seed default accounts for students, tenants, agents, and admin
-const SEED_USERS = [
-  {
-    id: 'USR-STU-001',
-    email: 'tunde.student@unilag.edu.ng',
-    password: 'password123',
-    fullName: 'Tunde Adeyemi',
-    role: 'student',
-    phone: '+2348123456789',
-    state: 'Lagos',
-    university: 'UNILAG (Akoka)',
-    targetBudget: 250000,
-    preferredType: 'Self-Contain Ensuite',
-    avatar: '🎓',
-    matricNo: '210408012',
-    department: 'Computer Science',
-    joinedAt: '10/10/2026'
-  },
-  {
-    id: 'USR-TEN-001',
-    email: 'amaka.okonkwo@gmail.com',
-    password: 'password123',
-    fullName: 'Amaka Okonkwo',
-    role: 'tenant',
-    phone: '+2348039876543',
-    state: 'Lagos',
-    preferredArea: 'Lekki Phase 1',
-    targetBudget: 3500000,
-    preferredType: '3-Bedroom Flat',
-    avatar: '🏠',
-    joinedAt: '10/08/2026'
-  },
-  {
-    id: 'USR-AGT-001',
-    email: 'babatunde@realty.ng',
-    password: 'password123',
-    fullName: 'Babatunde Adeleke',
-    role: 'agent',
-    phone: '+2348031234567',
-    state: 'Lagos',
-    agency: 'Prime Sanctuary Realtors',
-    agentId: 'AG-10928',
-    avatar: '💼',
-    joinedAt: '10/05/2026'
-  },
-  {
-    id: 'USR-ADM-001',
-    email: 'admin@doma.ng',
-    password: 'admin123',
-    fullName: 'Super Admin',
-    role: 'admin',
-    phone: '+2348000000000',
-    state: 'Abuja',
-    avatar: '🛡️',
-    joinedAt: '10/01/2026'
+function mapAgent(a) {
+  return {
+    id: a.id,
+    userId: a.user_id,
+    name: a.name,
+    agency: a.agency,
+    phone: a.phone,
+    email: a.email,
+    state: a.state,
+    cac: a.cac,
+    nin: a.nin,
+    idType: a.id_type,
+    idNumber: a.id_number,
+    campusFocus: a.campus_focus,
+    officeAddress: a.office_address,
+    kycStatus: a.kyc_status,
+    rejectionReason: a.rejection_reason,
+    registeredAt: a.created_at ? new Date(a.created_at).toLocaleDateString() : ''
+  };
+}
+
+function mapListing(l) {
+  return {
+    id: l.id,
+    agentId: l.agent_id,
+    agentName: l.agent_name,
+    agentAgency: l.agent_agency,
+    agentPhone: l.agent_phone,
+    type: l.type,
+    title: l.title,
+    price: parseFloat(l.price) || 0,
+    priceFormatted: l.price_formatted,
+    period: l.period,
+    state: l.state,
+    area: l.area,
+    address: l.address,
+    spec1: l.spec1,
+    spec2: l.spec2,
+    campus: l.campus,
+    campusDist: l.campus_dist,
+    lat: l.lat,
+    lng: l.lng,
+    media: Array.isArray(l.media) ? l.media : [],
+    isActive: l.is_active,
+    createdAt: l.created_at
+  };
+}
+
+// Turn Supabase/PostgREST errors into messages people can act on
+function friendlyError(error, fallback) {
+  const msg = (error && error.message) || '';
+  if (/row-level security|permission denied/i.test(msg)) {
+    return new Error('You do not have permission to do that. Please sign in with the right account.');
   }
-];
+  if (/Invalid login credentials/i.test(msg)) return new Error('Incorrect email or password.');
+  if (/Email not confirmed/i.test(msg)) return new Error('Please confirm your email first. Check your inbox for the link.');
+  if (/User already registered/i.test(msg)) return new Error('An account with this email already exists. Please sign in instead.');
+  return new Error(msg || fallback);
+}
 
 class DomaCloudService {
   constructor() {
-    this.config = this.loadConfig();
+    this.config = DOMA_CONFIG;
     this.supabaseClient = null;
-    this.initSupabaseClient();
-    this.initLocalAgentsDB();
-    this.initLocalUsersDB();
-  }
+    this._profilePromise = null;
 
-  loadConfig() {
-    try {
-      const saved = localStorage.getItem('doma_cloud_config');
-      return saved ? { ...DEFAULT_CLOUD_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_CLOUD_CONFIG };
-    } catch (e) {
-      return { ...DEFAULT_CLOUD_CONFIG };
-    }
-  }
-
-  saveConfig(newConfig) {
-    this.config = { ...this.config, ...newConfig };
-    localStorage.setItem('doma_cloud_config', JSON.stringify(this.config));
-    this.initSupabaseClient();
-    return this.config;
-  }
-
-  initLocalAgentsDB() {
-    if (!localStorage.getItem('doma_agents_db')) {
-      localStorage.setItem('doma_agents_db', JSON.stringify(SEED_AGENTS));
-    }
-  }
-
-  initLocalUsersDB() {
-    if (!localStorage.getItem('doma_users_db')) {
-      localStorage.setItem('doma_users_db', JSON.stringify(SEED_USERS));
-    }
-  }
-
-  getCurrentUser() {
-    try {
-      const user = localStorage.getItem('doma_current_user');
-      return user ? JSON.parse(user) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  setCurrentUser(user) {
-    if (user) {
-      localStorage.setItem('doma_current_user', JSON.stringify(user));
-      // If user is an agent, synchronize with doma_agent
-      if (user.role === 'agent') {
-        const localAgents = JSON.parse(localStorage.getItem('doma_agents_db') || '[]');
-        const agentRecord = localAgents.find(a => a.email === user.email || a.id === user.agentId);
-        if (agentRecord) {
-          localStorage.setItem('doma_agent', JSON.stringify(agentRecord));
-        }
-      }
-    } else {
-      localStorage.removeItem('doma_current_user');
-    }
-    return user;
-  }
-
-  signOutUser() {
-    localStorage.removeItem('doma_current_user');
-    return true;
-  }
-
-  async getUsers() {
-    if (this.isSupabaseConnected()) {
+    if (window.supabase && this.config.supabaseUrl && this.config.supabaseAnonKey) {
       try {
-        const { data, error } = await this.supabaseClient.from('users').select('*').order('created_at', { ascending: false });
-        if (!error && Array.isArray(data)) {
-          const mapped = data.map(u => ({
-            id: u.id,
-            email: u.email,
-            fullName: u.full_name,
-            role: u.role,
-            phone: u.phone,
-            state: u.state,
-            university: u.university,
-            targetBudget: u.target_budget,
-            preferredType: u.preferred_type,
-            agentId: u.agent_id,
-            joinedAt: u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
-          }));
-          return mapped;
-        }
-      } catch (e) {
-        console.warn('Supabase getUsers error, falling back to local:', e);
-      }
-    }
-
-    try {
-      const local = localStorage.getItem('doma_users_db');
-      return local ? JSON.parse(local) : [...SEED_USERS];
-    } catch (e) {
-      return [...SEED_USERS];
-    }
-  }
-
-  async saveUser(user) {
-    // 1. Save to local storage
-    let localUsers = [];
-    try {
-      localUsers = JSON.parse(localStorage.getItem('doma_users_db') || '[]');
-    } catch (e) {
-      localUsers = [...SEED_USERS];
-    }
-    const idx = localUsers.findIndex(u => u.email.toLowerCase() === user.email.toLowerCase());
-    if (idx >= 0) {
-      localUsers[idx] = { ...localUsers[idx], ...user };
-    } else {
-      localUsers.unshift(user);
-    }
-    localStorage.setItem('doma_users_db', JSON.stringify(localUsers));
-
-    // 2. Save to Supabase if connected
-    if (this.isSupabaseConnected()) {
-      try {
-        const payload = {
-          id: user.id,
-          email: user.email.toLowerCase().trim(),
-          full_name: user.fullName,
-          role: user.role,
-          phone: user.phone || null,
-          state: user.state || 'Lagos',
-          university: user.university || null,
-          target_budget: user.targetBudget || null,
-          preferred_type: user.preferredType || null,
-          agent_id: user.agentId || null
-        };
-        await this.supabaseClient.from('users').upsert(payload, { onConflict: 'email' });
-      } catch (e) {
-        console.warn('Supabase saveUser error:', e);
-      }
-    }
-    return user;
-  }
-
-  async authenticateUser(email, password) {
-    const cleanEmail = email.toLowerCase().trim();
-    const users = await this.getUsers();
-    const found = users.find(u => u.email.toLowerCase() === cleanEmail);
-
-    if (!found) {
-      throw new Error('No account found with this email. Please check your email or create a new account.');
-    }
-
-    if (found.password && found.password !== password && password !== 'password123' && password !== 'admin123') {
-      throw new Error('Incorrect password. Please try again.');
-    }
-
-    this.setCurrentUser(found);
-    return found;
-  }
-
-  async registerUser(userData) {
-    const cleanEmail = userData.email.toLowerCase().trim();
-    const users = await this.getUsers();
-    if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-      throw new Error('An account with this email already exists. Please sign in instead.');
-    }
-
-    const newUser = {
-      id: 'USR-' + (userData.role || 'user').toUpperCase().slice(0, 3) + '-' + Math.floor(1000 + Math.random() * 9000),
-      email: cleanEmail,
-      password: userData.password || 'password123',
-      fullName: userData.fullName.trim(),
-      role: userData.role || 'student',
-      phone: userData.phone || '',
-      state: userData.state || 'Lagos',
-      university: userData.university || null,
-      targetBudget: userData.targetBudget ? parseFloat(userData.targetBudget) : null,
-      preferredType: userData.preferredType || null,
-      matricNo: userData.matricNo || null,
-      department: userData.department || null,
-      preferredArea: userData.preferredArea || null,
-      joinedAt: new Date().toLocaleDateString()
-    };
-
-    if (newUser.role === 'agent') {
-      newUser.agentId = 'AG-' + Math.floor(10000 + Math.random() * 90000);
-      const agentProfile = {
-        id: newUser.agentId,
-        name: newUser.fullName,
-        agency: userData.agency || `${newUser.fullName} Properties`,
-        phone: newUser.phone,
-        email: newUser.email,
-        state: newUser.state,
-        cac: userData.cac || 'RC ' + Math.floor(1000000 + Math.random() * 9000000),
-        nin: userData.nin || '28' + Math.floor(100000000 + Math.random() * 900000000),
-        idType: userData.idType || 'NIMC Slip',
-        idNumber: userData.idNumber || '',
-        campusFocus: userData.campusFocus || 'General Residential & Commercial',
-        officeAddress: userData.officeAddress || `${newUser.state}, Nigeria`,
-        kycStatus: 'pending',
-        registeredAt: new Date().toLocaleDateString()
-      };
-      await this.saveAgent(agentProfile);
-      localStorage.setItem('doma_agent', JSON.stringify(agentProfile));
-    }
-
-    await this.saveUser(newUser);
-    this.setCurrentUser(newUser);
-    return newUser;
-  }
-
-  initSupabaseClient() {
-    if (this.config.supabaseUrl && this.config.supabaseAnonKey && window.supabase) {
-      try {
-        this.supabaseClient = window.supabase.createClient(
-          this.config.supabaseUrl.trim(),
-          this.config.supabaseAnonKey.trim()
-        );
+        this.supabaseClient = window.supabase.createClient(this.config.supabaseUrl, this.config.supabaseAnonKey);
+        this.supabaseClient.auth.onAuthStateChange(() => {
+          this._profilePromise = null;
+        });
       } catch (err) {
         console.warn('Supabase initialization error:', err);
-        this.supabaseClient = null;
       }
-    } else {
-      this.supabaseClient = null;
     }
   }
 
   isSupabaseConnected() {
-    return !!(this.supabaseClient && this.config.supabaseUrl && this.config.supabaseAnonKey);
+    return !!this.supabaseClient;
   }
 
   isCloudinaryConnected() {
     return !!(this.config.cloudinaryCloudName && this.config.cloudinaryUploadPreset);
   }
 
-  async testSupabase(url, key) {
-    if (!window.supabase) {
-      throw new Error('Supabase client SDK is not loaded. Check internet connection.');
+  requireClient() {
+    if (!this.supabaseClient) {
+      throw new Error('Cannot reach the DOMA database. Check your internet connection and reload.');
     }
-    const testClient = window.supabase.createClient(url.trim(), key.trim());
-    const { data, error } = await testClient.from('agents').select('id').limit(1);
+    return this.supabaseClient;
+  }
+
+  // ==========================================
+  // AUTHENTICATION (Supabase Auth)
+  // ==========================================
+  async getSession() {
+    if (!this.supabaseClient) return null;
+    const { data } = await this.supabaseClient.auth.getSession();
+    return data ? data.session : null;
+  }
+
+  /** Signed-in user's profile, or null. Cached until the auth state changes. */
+  getCurrentUser() {
+    if (!this._profilePromise) {
+      this._profilePromise = this.loadProfile().catch(err => {
+        console.warn('Profile load error:', err);
+        this._profilePromise = null;
+        return null;
+      });
+    }
+    return this._profilePromise;
+  }
+
+  async loadProfile() {
+    const session = await this.getSession();
+    if (!session) return null;
+
+    const { data, error } = await this.supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return mapProfile(data);
+
+    // Profile trigger has not run (schema not applied yet). Never trust a role from
+    // client-side metadata here; the database is the only source of roles.
+    const meta = session.user.user_metadata || {};
+    return mapProfile({ id: session.user.id, email: session.user.email, full_name: meta.full_name, role: 'student' });
+  }
+
+  async signIn(email, password) {
+    const client = this.requireClient();
+    const { error } = await client.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (error) throw friendlyError(error, 'Sign in failed.');
+    this._profilePromise = null;
+    const profile = await this.getCurrentUser();
+    if (!profile) throw new Error('Signed in, but your profile could not be loaded. Please try again.');
+    return profile;
+  }
+
+  /** Returns { user, needsConfirmation }. user is null until the email is confirmed. */
+  async signUp(userData) {
+    const client = this.requireClient();
+    const { data, error } = await client.auth.signUp({
+      email: userData.email.trim().toLowerCase(),
+      password: userData.password,
+      options: {
+        emailRedirectTo: new URL('auth.html', window.location.href).href,
+        data: {
+          full_name: (userData.fullName || '').trim(),
+          role: userData.role,
+          phone: userData.phone || null,
+          state: userData.state || null,
+          university: userData.university || null,
+          target_budget: userData.targetBudget ? String(userData.targetBudget) : null,
+          preferred_type: userData.preferredType || null,
+          preferred_area: userData.preferredArea || null,
+          agency: userData.agency || null
+        }
+      }
+    });
+    if (error) throw friendlyError(error, 'Registration failed.');
+
+    if (!data.session) {
+      return { user: null, needsConfirmation: true };
+    }
+    this._profilePromise = null;
+    return { user: await this.getCurrentUser(), needsConfirmation: false };
+  }
+
+  async signOut() {
+    if (this.supabaseClient) await this.supabaseClient.auth.signOut();
+    this._profilePromise = null;
+  }
+
+  async sendPasswordReset(email) {
+    const client = this.requireClient();
+    const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: new URL('auth.html?mode=reset', window.location.href).href
+    });
+    if (error) throw friendlyError(error, 'Could not send the reset email.');
+  }
+
+  async updatePassword(newPassword) {
+    const client = this.requireClient();
+    const { error } = await client.auth.updateUser({ password: newPassword });
+    if (error) throw friendlyError(error, 'Could not update your password.');
+  }
+
+  onAuthChange(callback) {
+    if (!this.supabaseClient) return;
+    this.supabaseClient.auth.onAuthStateChange((event, session) => callback(event, session));
+  }
+
+  // ==========================================
+  // AGENTS & KYC
+  // ==========================================
+  async getMyAgent() {
+    const session = await this.getSession();
+    if (!session) return null;
+    const { data, error } = await this.supabaseClient
+      .from('agents')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
     if (error) {
-      throw new Error(error.message || 'Database connection failed. Ensure schema tables are created.');
+      console.warn('getMyAgent error:', error);
+      return null;
     }
-    return true;
+    return data ? mapAgent(data) : null;
   }
 
-  // ==========================================
-  // AGENTS & KYC DATABASE OPERATIONS
-  // ==========================================
+  /** Create or update the signed-in agent's KYC application. Status is set by the database. */
+  async submitAgentApplication(agent) {
+    const client = this.requireClient();
+    const session = await this.getSession();
+    if (!session) throw new Error('Please sign in to your agent account first.');
+
+    const payload = {
+      name: agent.name,
+      agency: agent.agency,
+      phone: agent.phone,
+      email: session.user.email,
+      state: agent.state,
+      cac: agent.cac,
+      nin: agent.nin,
+      id_type: agent.idType,
+      id_number: agent.idNumber,
+      campus_focus: agent.campusFocus,
+      office_address: agent.officeAddress
+    };
+
+    const existing = await this.getMyAgent();
+    const query = existing
+      ? client.from('agents').update(payload).eq('id', existing.id)
+      : client.from('agents').insert({ ...payload, user_id: session.user.id });
+
+    const { data, error } = await query.select().single();
+    if (error) throw friendlyError(error, 'Could not save your KYC application.');
+    return mapAgent(data);
+  }
+
+  /** Admin only: RLS returns just your own row for anyone else. */
   async getAgents() {
-    if (this.isSupabaseConnected()) {
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('agents')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (!error && Array.isArray(data)) {
-          // Normalize Supabase fields to camelCase
-          const normalized = data.map(a => ({
-            id: a.id,
-            name: a.name,
-            agency: a.agency,
-            phone: a.phone,
-            email: a.email,
-            state: a.state,
-            cac: a.cac,
-            nin: a.nin,
-            idType: a.id_type,
-            idNumber: a.id_number,
-            campusFocus: a.campus_focus,
-            officeAddress: a.office_address,
-            kycStatus: a.kyc_status,
-            rejectionReason: a.rejection_reason,
-            registeredAt: a.created_at ? new Date(a.created_at).toLocaleDateString() : ''
-          }));
-          localStorage.setItem('doma_agents_db', JSON.stringify(normalized));
-          return normalized;
-        }
-      } catch (e) {
-        console.warn('Falling back to local agents database:', e);
-      }
-    }
-
-    // Local fallback
-    try {
-      const local = localStorage.getItem('doma_agents_db');
-      return local ? JSON.parse(local) : [...SEED_AGENTS];
-    } catch (e) {
-      return [...SEED_AGENTS];
-    }
-  }
-
-  async saveAgent(agent) {
-    // Save to local storage first for resilience
-    let localAgents = [];
-    try {
-      localAgents = JSON.parse(localStorage.getItem('doma_agents_db') || '[]');
-    } catch (e) {
-      localAgents = [...SEED_AGENTS];
-    }
-    const existingIdx = localAgents.findIndex(a => a.id === agent.id);
-    if (existingIdx >= 0) {
-      localAgents[existingIdx] = { ...localAgents[existingIdx], ...agent };
-    } else {
-      localAgents.unshift(agent);
-    }
-    localStorage.setItem('doma_agents_db', JSON.stringify(localAgents));
-
-    // If active currentAgent matches, update active session
-    const currentAgent = JSON.parse(localStorage.getItem('doma_agent') || 'null');
-    if (currentAgent && currentAgent.id === agent.id) {
-      localStorage.setItem('doma_agent', JSON.stringify({ ...currentAgent, ...agent }));
-    }
-
-    // Push to Supabase if connected
-    if (this.isSupabaseConnected()) {
-      try {
-        const payload = {
-          id: agent.id,
-          name: agent.name,
-          agency: agent.agency,
-          phone: agent.phone,
-          email: agent.email,
-          state: agent.state,
-          cac: agent.cac,
-          nin: agent.nin,
-          id_type: agent.idType,
-          id_number: agent.idNumber,
-          campus_focus: agent.campusFocus,
-          office_address: agent.officeAddress,
-          kyc_status: agent.kycStatus || 'pending',
-          rejection_reason: agent.rejectionReason || null
-        };
-
-        const { error } = await this.supabaseClient
-          .from('agents')
-          .upsert(payload, { onConflict: 'id' });
-
-        if (error) {
-          console.warn('Supabase agent upsert error:', error);
-        }
-      } catch (e) {
-        console.warn('Supabase saveAgent exception:', e);
-      }
-    }
-
-    return agent;
+    const client = this.requireClient();
+    const { data, error } = await client.from('agents').select('*').order('created_at', { ascending: false });
+    if (error) throw friendlyError(error, 'Could not load agent applications.');
+    return data.map(mapAgent);
   }
 
   async updateAgentKYC(agentId, kycStatus, rejectionReason = '') {
-    // 1. Update in local storage
-    let localAgents = [];
-    try {
-      localAgents = JSON.parse(localStorage.getItem('doma_agents_db') || '[]');
-    } catch (e) {
-      localAgents = [];
-    }
-
-    let updatedAgent = null;
-    localAgents = localAgents.map(a => {
-      if (a.id === agentId) {
-        updatedAgent = {
-          ...a,
-          kycStatus,
-          rejectionReason: kycStatus === 'rejected' ? rejectionReason : ''
-        };
-        return updatedAgent;
-      }
-      return a;
-    });
-
-    localStorage.setItem('doma_agents_db', JSON.stringify(localAgents));
-
-    // Also update current active agent session if it's the same agent
-    try {
-      const cur = JSON.parse(localStorage.getItem('doma_agent') || 'null');
-      if (cur && cur.id === agentId) {
-        cur.kycStatus = kycStatus;
-        cur.rejectionReason = rejectionReason;
-        localStorage.setItem('doma_agent', JSON.stringify(cur));
-      }
-    } catch (e) {}
-
-    // 2. Update in Supabase
-    if (this.isSupabaseConnected()) {
-      try {
-        const { error } = await this.supabaseClient
-          .from('agents')
-          .update({
-            kyc_status: kycStatus,
-            rejection_reason: kycStatus === 'rejected' ? rejectionReason : null
-          })
-          .eq('id', agentId);
-
-        if (error) {
-          console.warn('Supabase KYC status update error:', error);
-        }
-      } catch (e) {
-        console.warn('Supabase updateAgentKYC exception:', e);
-      }
-    }
-
-    return updatedAgent;
+    const client = this.requireClient();
+    const { data, error } = await client
+      .from('agents')
+      .update({
+        kyc_status: kycStatus,
+        rejection_reason: kycStatus === 'rejected' ? rejectionReason : null
+      })
+      .eq('id', agentId)
+      .select()
+      .single();
+    if (error) throw friendlyError(error, 'Could not update KYC status.');
+    return mapAgent(data);
   }
 
   // ==========================================
-  // LISTINGS DATABASE OPERATIONS
+  // LISTINGS
   // ==========================================
+  /** Active listings, newest first. Returns null if the database could not be reached. */
   async getListings() {
-    if (this.isSupabaseConnected()) {
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('listings')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
-        if (!error && Array.isArray(data) && data.length > 0) {
-          const mapped = data.map(l => ({
-            id: l.id,
-            agentId: l.agent_id,
-            agentName: l.agent_name,
-            agentAgency: l.agent_agency,
-            agentPhone: l.agent_phone,
-            type: l.type,
-            title: l.title,
-            price: parseFloat(l.price) || 0,
-            priceFormatted: l.price_formatted,
-            period: l.period,
-            state: l.state,
-            area: l.area,
-            address: l.address,
-            spec1: l.spec1,
-            spec2: l.spec2,
-            campus: l.campus,
-            campusDist: l.campus_dist,
-            lat: l.lat,
-            lng: l.lng,
-            media: Array.isArray(l.media) ? l.media : [],
-            createdAt: l.created_at
-          }));
-          localStorage.setItem('doma_listings', JSON.stringify(mapped));
-          return mapped;
-        }
-      } catch (e) {
-        console.warn('Supabase getListings fallback to local:', e);
-      }
-    }
-
+    if (!this.supabaseClient) return null;
     try {
-      const saved = localStorage.getItem('doma_listings');
-      return saved ? JSON.parse(saved) : [];
+      const { data, error } = await this.supabaseClient
+        .from('listings')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(mapListing);
     } catch (e) {
-      return [];
+      console.warn('Supabase getListings error:', e);
+      return null;
     }
   }
 
   async saveListing(listing) {
-    // 1. Save to local storage
-    let current = [];
-    try {
-      current = JSON.parse(localStorage.getItem('doma_listings') || '[]');
-    } catch (e) {
-      current = [];
-    }
-    current.unshift(listing);
-    localStorage.setItem('doma_listings', JSON.stringify(current));
+    const client = this.requireClient();
+    const payload = {
+      id: listing.id,
+      agent_id: listing.agentId,
+      agent_name: listing.agentName,
+      agent_agency: listing.agentAgency,
+      agent_phone: listing.agentPhone,
+      type: listing.type,
+      title: listing.title,
+      price: listing.price,
+      price_formatted: listing.priceFormatted,
+      period: listing.period,
+      state: listing.state,
+      area: listing.area,
+      address: listing.address,
+      spec1: listing.spec1,
+      spec2: listing.spec2,
+      campus: listing.campus,
+      campus_dist: listing.campusDist,
+      lat: listing.lat,
+      lng: listing.lng,
+      media: listing.media || [],
+      is_active: true
+    };
 
-    // 2. Save to Supabase
-    if (this.isSupabaseConnected()) {
-      try {
-        const payload = {
-          id: listing.id,
-          agent_id: listing.agentId,
-          agent_name: listing.agentName,
-          agent_agency: listing.agentAgency,
-          agent_phone: listing.agentPhone,
-          type: listing.type,
-          title: listing.title,
-          price: listing.price,
-          price_formatted: listing.priceFormatted,
-          period: listing.period,
-          state: listing.state,
-          area: listing.area,
-          address: listing.address,
-          spec1: listing.spec1,
-          spec2: listing.spec2,
-          campus: listing.campus,
-          campus_dist: listing.campusDist,
-          lat: listing.lat,
-          lng: listing.lng,
-          media: listing.media || [],
-          is_active: true
-        };
-
-        const { error } = await this.supabaseClient
-          .from('listings')
-          .insert(payload);
-
-        if (error) {
-          console.warn('Supabase saveListing error:', error);
-        }
-      } catch (e) {
-        console.warn('Supabase saveListing exception:', e);
-      }
-    }
-
-    return listing;
+    const { data, error } = await client.from('listings').insert(payload).select().single();
+    if (error) throw friendlyError(error, 'Could not publish the listing.');
+    return mapListing(data);
   }
 
   async deleteListing(listingId) {
-    // 1. Delete from local storage
-    try {
-      let current = JSON.parse(localStorage.getItem('doma_listings') || '[]');
-      current = current.filter(l => l.id !== listingId);
-      localStorage.setItem('doma_listings', JSON.stringify(current));
-    } catch (e) {}
-
-    // 2. Delete from Supabase
-    if (this.isSupabaseConnected()) {
-      try {
-        await this.supabaseClient.from('listings').delete().eq('id', listingId);
-      } catch (e) {
-        console.warn('Supabase deleteListing error:', e);
-      }
-    }
+    const client = this.requireClient();
+    // .select() makes a policy refusal visible: zero rows back means nothing was deleted
+    const { data, error } = await client.from('listings').delete().eq('id', listingId).select('id');
+    if (error) throw friendlyError(error, 'Could not delete the listing.');
+    if (!data || data.length === 0) throw new Error('Listing not found, or you are not allowed to delete it.');
     return true;
   }
 
@@ -679,7 +375,7 @@ class DomaCloudService {
 
       const cloudName = this.config.cloudinaryCloudName.trim();
       const preset = this.config.cloudinaryUploadPreset.trim();
-      const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+      const endpoint = `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/${resourceType}/upload`;
 
       const formData = new FormData();
       formData.append('file', file);
@@ -692,8 +388,7 @@ class DomaCloudService {
       if (xhr.upload && typeof onProgress === 'function') {
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            onProgress(percent);
+            onProgress(Math.round((event.loaded / event.total) * 100));
           }
         };
       }
@@ -715,18 +410,13 @@ class DomaCloudService {
           let errMsg = `Upload failed with status ${xhr.status}`;
           try {
             const errRes = JSON.parse(xhr.responseText);
-            if (errRes.error && errRes.error.message) {
-              errMsg = errRes.error.message;
-            }
+            if (errRes.error && errRes.error.message) errMsg = errRes.error.message;
           } catch (e) {}
           reject(new Error(errMsg));
         }
       };
 
-      xhr.onerror = () => {
-        reject(new Error('Network error occurred during Cloudinary upload.'));
-      };
-
+      xhr.onerror = () => reject(new Error('Network error occurred during Cloudinary upload.'));
       xhr.send(formData);
     });
   }

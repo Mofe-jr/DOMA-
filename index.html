@@ -5,57 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOMA | Nigeria's Premier Portal for Houses for Rent &amp; Stores To-Let</title>
   <meta name="description" content="Discover verified houses for rent and commercial stores to-let in Nigeria. Direct agent registration, photo and video tours, and secure Naira payments.">
-  <meta name="theme-color" content="#000000">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="DOMA | Nigeria's Premier Portal for Houses for Rent &amp; Stores To-Let">
   <meta property="og:description" content="Direct agent registration, photo &amp; video tours, and secure Naira payments across Lagos, Abuja, and Port Harcourt.">
   <meta property="og:image" content="assets/images/hero_luxury_home.jpg">
-
-  <!-- Stylesheet -->
+  
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd000'><path d='M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
+  <a class="skip-link" href="#maincontent">Skip to main content</a>
 
-  <!-- ==========================================================================
-       Navigation Bar (White, Black & Yellow)
-       ========================================================================== -->
   <header class="site-header" id="main-header">
     <div class="container nav-container">
-      <a href="index.html" class="brand-logo" aria-label="DOMA Home">
-        <div class="brand-symbol">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </div>
-        <div class="brand-name">DOMA<span>.ng</span></div>
+      <a href="index.html" class="brand-logo" aria-label="DOMA home">
+        <span class="brand-symbol" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </span>
+        <span class="brand-name">DOMA<span>.ng</span></span>
       </a>
 
-      <nav aria-label="Main Navigation">
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <ul class="nav-links">
-          <li><a href="index.html" class="nav-link active">Home</a></li>
+          <li><a href="index.html" class="nav-link">Home</a></li>
           <li><a href="listings.html" class="nav-link">Houses &amp; Stores</a></li>
           <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
-          <li><a href="payment.html" class="nav-link">Naira Payment</a></li>
-          <li><a href="valuation.html" class="nav-link">Valuation &amp; Budget</a></li>
-          <li><a href="dashboard.html" class="nav-link" id="nav-custom-dash-link" style="display:none;">My Dashboard</a></li>
-          <li><a href="admin.html" class="nav-link" id="nav-admin-link" style="display:none; color: var(--yellow-500); font-weight: 700;">Admin</a></li>
+          <li><a href="payment.html" class="nav-link">Payments</a></li>
+          <li><a href="valuation.html" class="nav-link">Valuation</a></li>
+          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My Dashboard</a></li>
+          <li id="nav-admin-item" hidden><a href="admin.html" class="nav-link nav-link-admin">Admin</a></li>
+          <li class="nav-mobile-only"><a href="listings.html?filter=saved" class="nav-link">Saved listings <span class="wishlist-count">0</span></a></li>
+          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out</button></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="listings.html" class="btn-wishlist" id="nav-wishlist-btn" title="View Saved Listings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-          <span>Saved</span>
-          <span class="wishlist-count" id="wishlist-badge">0</span>
+        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span class="btn-wishlist-label">Saved</span>
+          <span class="wishlist-count">0</span>
         </a>
-
-        <a href="agent-portal.html" class="btn-primary" id="nav-agent-cta-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-          <span>Agent Register</span>
+        <a href="auth.html" class="btn-primary btn-account" id="nav-account-btn">
+          <span class="btn-icon" aria-hidden="true">👤</span>
+          <span class="btn-label">Sign In</span>
         </a>
-
-        <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle Menu">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <button type="button" class="menu-toggle" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
     </div>
@@ -169,7 +171,7 @@
               </select>
             </div>
 
-            <button class="btn-search" id="home-search-submit-btn" onclick="handleHomeSearch()">
+            <button type="button" class="btn-search" id="home-search-submit-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <span>Search Portal</span>
             </button>
@@ -224,13 +226,9 @@
           </button>
         </div>
 
-        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 32px; flex-wrap: wrap;">
-          <a href="listings.html?filter=student" class="btn-primary" style="font-size: 1rem; padding: 13px 28px;">
-            🎓 Explore Student Housing (&lt; ₦300k) →
-          </a>
-          <a href="agent-portal.html" class="btn-secondary" style="font-size: 1rem; padding: 13px 28px;">
-            🛡️ Agent KYC Registration &amp; Upload
-          </a>
+        <div class="hero-cta-row">
+          <a href="listings.html?filter=student" class="btn-primary btn-lg">🎓 Student housing under ₦300k →</a>
+          <a href="agent-portal.html" class="btn-secondary btn-lg">🛡️ List as a verified agent</a>
         </div>
       </div>
     </section>
@@ -240,7 +238,7 @@
          ========================================================================== -->
     <section class="category-showcase-section">
       <div class="container">
-        <div class="section-head" style="text-align: center; margin-bottom: 32px;">
+        <div class="section-head">
           <span class="section-tag">Visual Discovery</span>
           <h2 class="section-title">Explore Verified Nigerian Housing by Category</h2>
           <p class="section-subtitle">
@@ -341,19 +339,19 @@
             </div>
             <h4>Houses &amp; Flats for Rent</h4>
             <p>Verified flats, duplexes, self-contains, and serviced family homes across Lagos, Abuja, Port Harcourt, and Ibadan. Direct contact with verified agents.</p>
-            <a href="listings.html?filter=house" class="btn-outline-yellow" style="margin-top: 18px;">
+            <a href="listings.html?filter=house" class="btn-outline-yellow">
               Explore Houses →
             </a>
           </div>
 
           <!-- Pillar 2 -->
           <div class="feature-box">
-            <div class="feature-icon-wrap" style="color: #60a5fa;">
+            <div class="feature-icon-wrap blue">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
             <h4>Student Hostels &amp; Under ₦300k</h4>
             <p>Off-campus accommodation close to UNILAG, UI, LASU, UNIPORT, and YabaTech. Verified student bedspaces and self-contains costing under ₦300k/year.</p>
-            <a href="listings.html?filter=student" class="btn-outline-yellow" style="margin-top: 18px; border-color: #60a5fa; color: #93c5fd;">
+            <a href="listings.html?filter=student" class="btn-outline-yellow btn-outline-blue">
               Student Housing Radar →
             </a>
           </div>
@@ -365,7 +363,7 @@
             </div>
             <h4>Agent KYC Onboarding Studio</h4>
             <p>Agents apply by submitting NIN, CAC registration, and government ID. Unlocks a verified dashboard with full property upload capabilities.</p>
-            <a href="agent-portal.html" class="btn-outline-yellow" style="margin-top: 18px;">
+            <a href="agent-portal.html" class="btn-outline-yellow">
               Submit Agent KYC →
             </a>
           </div>
@@ -375,10 +373,10 @@
             <div class="feature-icon-wrap">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </div>
-            <h4>Secure Naira (₦) Escrow Gateway</h4>
-            <p>Pay agent verification fees, holding inspection deposits, or escrow rent securely via Verve/Mastercard, Providus Bank Transfer, or USSD.</p>
-            <a href="payment.html" class="btn-outline-yellow" style="margin-top: 18px;">
-              Open Payment Gateway →
+            <h4>Naira (₦) Payments</h4>
+            <p>Agent verification fees, inspection bookings and rent holding deposits in Naira. Card, transfer and USSD checkout is coming soon.</p>
+            <a href="payment.html" class="btn-outline-yellow">
+              See payment options →
             </a>
           </div>
         </div>
@@ -388,7 +386,7 @@
     <!-- ==========================================================================
          Top Rental Locations in Nigeria
          ========================================================================== -->
-    <section style="background: #080808;">
+    <section class="section-alt">
       <div class="container">
         <div class="section-head">
           <span class="section-tag">Popular Areas</span>
@@ -399,35 +397,35 @@
         </div>
 
         <div class="locations-grid">
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Lekki" class="location-card">
             <div class="location-name">Lekki Phase 1 &amp; Ikoyi</div>
             <div class="location-count">Flats &amp; Waterfront Homes</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Ikeja" class="location-card">
             <div class="location-name">Ikeja GRA &amp; Maryland</div>
             <div class="location-count">Duplexes &amp; Retail Shops</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Wuse" class="location-card">
             <div class="location-name">Wuse 2 &amp; Maitama, Abuja</div>
             <div class="location-count">Commercial Plazas &amp; Residences</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Garki" class="location-card">
             <div class="location-name">Garki &amp; Jabi Lake, Abuja</div>
             <div class="location-count">Office Suites &amp; Apartments</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Yaba" class="location-card">
             <div class="location-name">Yaba &amp; Surulere, Lagos</div>
             <div class="location-count">Tech Hubs, Self-Contains &amp; Stores</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Port%20Harcourt" class="location-card">
             <div class="location-name">Old GRA, Port Harcourt</div>
             <div class="location-count">Executive Houses &amp; Yards</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Bodija" class="location-card">
             <div class="location-name">Bodija &amp; Ring Road, Ibadan</div>
             <div class="location-count">Commercial Showrooms &amp; Flats</div>
           </a>
-          <a href="listings.html" class="location-card">
+          <a href="listings.html?q=Victoria%20Island" class="location-card">
             <div class="location-name">Victoria Island &amp; Oniru</div>
             <div class="location-count">Prime Showrooms &amp; High-Rises</div>
           </a>
@@ -440,104 +438,78 @@
          ========================================================================== -->
     <section>
       <div class="container">
-        <div style="background: #111111; border: 2px solid var(--yellow-500); border-radius: var(--radius-lg); padding: 50px 36px; text-align: center; box-shadow: 0 0 35px var(--yellow-glow-subtle);">
-          <span class="section-tag">Are you an Agent in Nigeria?</span>
-          <h2 style="font-size: 2.3rem; font-weight: 900; color: var(--text-white); margin-bottom: 14px;">
-            Start Uploading Your Houses &amp; Stores Today
-          </h2>
-          <p style="color: var(--text-secondary); max-width: 620px; margin: 0 auto 30px; font-size: 1.05rem;">
-            Registration takes less than 2 minutes. Upload unlimited photos and video tours to connect directly with active tenants on WhatsApp.
-          </p>
-          <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
-            <a href="agent-portal.html" class="btn-primary" style="font-size: 1rem; padding: 13px 30px;">
-              Register as Agent Now →
-            </a>
-            <a href="listings.html" class="btn-secondary" style="font-size: 1rem; padding: 13px 30px;">
-              View Available Listings
-            </a>
+        <div class="cta-banner">
+          <span class="section-tag">Are you an agent in Nigeria?</span>
+          <h2 class="cta-title">List your houses &amp; stores on DOMA</h2>
+          <p class="cta-text">Create an account in two minutes, get KYC-verified, then reach renters directly on WhatsApp.</p>
+          <div class="hero-cta-row">
+            <a href="auth.html?mode=signup&amp;role=agent" class="btn-primary btn-lg">Register as an agent →</a>
+            <a href="listings.html" class="btn-secondary btn-lg">Browse listings</a>
           </div>
         </div>
       </div>
     </section>
   </main>
-
-  <!-- ==========================================================================
-       Site Footer
-       ========================================================================== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div class="brand-logo" style="margin-bottom: 12px;">
-            <div class="brand-symbol">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </div>
-            <div class="brand-name">DOMA<span>.ng</span></div>
-          </div>
-          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-            Nigeria's trusted portal for verified agents to list houses for rent and commercial stores to-let.
-          </p>
+          <a href="index.html" class="brand-logo" aria-label="DOMA home">
+            <span class="brand-symbol" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </span>
+            <span class="brand-name">DOMA<span>.ng</span></span>
+          </a>
+          <p>Houses, student hostels and stores to let across Nigeria, listed by KYC-checked agents.</p>
         </div>
 
         <div class="footer-col">
-          <h5>Pages</h5>
+          <h5>Explore</h5>
           <ul class="footer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="listings.html">Houses &amp; Stores</a></li>
-            <li><a href="agent-portal.html">Agent Portal</a></li>
-            <li><a href="payment.html">Naira Payment</a></li>
-            <li><a href="valuation.html">Valuation &amp; Budget</a></li>
+            <li><a href="listings.html?filter=house">Houses for rent</a></li>
+            <li><a href="listings.html?filter=student">Student hostels</a></li>
+            <li><a href="listings.html?filter=under-300k">Under ₦300k</a></li>
+            <li><a href="listings.html?filter=store">Stores to let</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
-          <h5>Rentals</h5>
+          <h5>Agents</h5>
           <ul class="footer-links">
-            <li><a href="listings.html?filter=house">Houses for Rent</a></li>
-            <li><a href="listings.html?filter=store">Stores to Let</a></li>
-            <li><a href="listings.html">Self-Contains &amp; Flats</a></li>
-            <li><a href="listings.html">Commercial Plazas</a></li>
+            <li><a href="agent-portal.html">Agent portal</a></li>
+            <li><a href="auth.html?mode=signup&amp;role=agent">Register as an agent</a></li>
+            <li><a href="payment.html?service=verification">Verification fee</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
-          <h5>Agent Hub</h5>
+          <h5>Account</h5>
           <ul class="footer-links">
-            <li><a href="agent-portal.html">Register as Agent</a></li>
-            <li><a href="agent-portal.html">Upload Listing</a></li>
-            <li><a href="payment.html?service=verification">Pay Verification (₦5,000)</a></li>
-            <li><a href="payment.html">Naira Escrow</a></li>
-            <li><a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a></li>
+            <li><a href="auth.html">Sign in</a></li>
+            <li><a href="dashboard.html">My dashboard</a></li>
+            <li><a href="listings.html?filter=saved">Saved listings</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
           <h5>Legal</h5>
           <ul class="footer-links">
-            <li><a href="#">Terms of Service</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Agent Code of Conduct</a></li>
-            <li><a href="#">SCUML Compliance</a></li>
+            <li><a href="#">Terms of service</a></li>
+            <li><a href="#">Privacy policy</a></li>
+            <li><a href="#">Agent code of conduct</a></li>
           </ul>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <div>&copy; 2026 DOMA Nigeria Real Estate Ltd. RC 1948201. All rights reserved.</div>
-        <div style="display: flex; gap: 20px;">
-          <span>NIESV Partner</span>
-          <span>•</span>
-          <span>REDAN Certified</span>
-          <span>•</span>
-          <span>Naira Payments Powered</span>
-        </div>
+        <div>&copy; 2026 DOMA Nigeria. All rights reserved.</div>
+        <div>Always inspect a property in person before paying any money.</div>
       </div>
     </div>
   </footer>
-
-  <!-- Supabase & Cloudinary SDK & Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.js" integrity="sha256-JOjADcJdpCDudBBotgvNtfYss1mNiDQFis837G7hpyQ=" crossorigin="anonymous"></script>
   <script src="config.js"></script>
+  <script src="ui.js"></script>
   <script src="app.js"></script>
   <script>
     function handleHomeSearch() {
@@ -549,6 +521,11 @@
       if (budget && budget !== 'any') url += '&budget=' + encodeURIComponent(budget);
       window.location.href = url;
     }
+
+    document.querySelector('#home-search-submit-btn').addEventListener('click', handleHomeSearch);
+    document.querySelector('#home-search-location').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleHomeSearch();
+    });
   </script>
 </body>
 </html>

@@ -4,9 +4,12 @@
  */
 
 // Global State
-let currentAgent = null;
+let currentUser = null; // signed-in profile (from Supabase Auth), or null
+let currentAgent = null; // signed-in user's agent/KYC record, or null
 let currentListings = [];
+let listingsAreSamples = false; // true when showing DEMO_LISTINGS instead of the live database
 let uploadedMediaFiles = [];
+const MAX_MEDIA_FILES = 8;
 let leafletMap = null;
 let mapMarkers = [];
 let currentRoutePolyline = null;
@@ -67,17 +70,6 @@ const STARTING_HUBS = {
   'airport_abuja': { name: 'Nnamdi Azikiwe Airport, Abuja', lat: 9.0065, lng: 7.2631 },
   'ph_gra': { name: 'Aba Road / Old GRA, Port Harcourt', lat: 4.8150, lng: 7.0450 }
 };
-
-// Security: HTML entity escaper to prevent stored XSS
-function escapeHtml(value) {
-  if (value === null || value === undefined) return '';
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 // Media: Canvas-based client-side image downscaler to stay within browser storage quota
 function compressImage(file, maxDimension = 1000, quality = 0.75) {
@@ -296,23 +288,22 @@ const DEMO_LISTINGS = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
-  initGlobalNavigation();
-  initAgentState();
-  initListingsManager();
+document.addEventListener('DOMContentLoaded', async () => {
   initMediaUploader();
   initModals();
-  initToast();
+
+  await Promise.all([loadSessionState(), loadListings()]);
 
   // Page-specific initializers
   if (document.querySelector('#hero-slider-section')) {
     initHeroSlider();
   }
-  if (document.querySelector('#properties-grid') || document.querySelector('#empty-listings-state')) {
-    initListingsPage();
-  }
+  // Map first, so URL filters and search focus apply to it
   if (document.querySelector('#interactive-map')) {
     initInteractiveMap();
+  }
+  if (document.querySelector('#properties-grid') || document.querySelector('#empty-listings-state')) {
+    initListingsPage();
   }
   if (document.querySelector('#agent-reg-form') || document.querySelector('#agent-active-dashboard')) {
     initAgentPortalPage();
@@ -378,7 +369,10 @@ function initHeroSlider() {
       const sub = activeSlideEl.dataset.subtitle;
 
       if (title && heroTitle) {
-        heroTitle.innerHTML = title + ` <br><span class="gradient-text">directly from KYC-verified agents</span>`;
+        const accent = document.createElement('span');
+        accent.className = 'gradient-text';
+        accent.textContent = 'directly from KYC-verified agents';
+        heroTitle.replaceChildren(document.createTextNode(title + ' '), document.createElement('br'), accent);
       }
       if (sub && heroSubtitle) {
         heroSubtitle.textContent = sub;
@@ -455,165 +449,30 @@ function initHeroSlider() {
 }
 
 /* ==========================================================================
-   Global Navigation
+   Session & Listings (Supabase is the source of truth)
    ========================================================================== */
-function initGlobalNavigation() {
-  const header = document.querySelector('.site-header');
-  if (header) {
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-    });
-  }
-
-  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('.nav-link').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === currentPath || (currentPath === '' && href === 'index.html')) {
-      link.classList.add('active');
-    } else if (href && !href.startsWith('#')) {
-      link.classList.remove('active');
-    }
-  });
-
-  const menuBtn = document.querySelector('#mobile-menu-btn');
-  if (menuBtn) {
-    menuBtn.addEventListener('click', () => {
-      const navLinks = document.querySelector('.nav-links');
-      if (navLinks) {
-        const isFlex = navLinks.style.display === 'flex';
-        navLinks.style.display = isFlex ? 'none' : 'flex';
-        navLinks.style.flexDirection = 'column';
-        navLinks.style.position = 'absolute';
-        navLinks.style.top = '80px';
-        navLinks.style.left = '0';
-        navLinks.style.right = '0';
-        navLinks.style.background = '#0a0a0a';
-        navLinks.style.padding = '20px';
-        navLinks.style.borderBottom = '1px solid var(--yellow-500)';
-      }
-    });
-  }
-
-  updateWishlistBadge();
+async function loadSessionState() {
+  if (!window.DOMA_CLOUD) return;
+  currentUser = await window.DOMA_CLOUD.getCurrentUser();
+  currentAgent = currentUser && currentUser.role === 'agent'
+    ? await window.DOMA_CLOUD.getMyAgent()
+    : null;
 }
 
-function updateWishlistBadge() {
-  const badge = document.querySelector('#wishlist-badge');
-  if (!badge) return;
-  const saved = JSON.parse(localStorage.getItem('doma_wishlist') || '[]');
-  badge.textContent = saved.length;
-}
-
-/* ==========================================================================
-   Agent State & Persistence
-   ========================================================================== */
-function initAgentState() {
-  initUserState();
-}
-
-function initUserState() {
-  const rawAgent = localStorage.getItem('doma_agent');
-  if (rawAgent) {
-    try {
-      currentAgent = JSON.parse(rawAgent);
-    } catch (e) {
-      currentAgent = null;
-    }
-  }
-
-  const currentUser = window.DOMA_CLOUD ? window.DOMA_CLOUD.getCurrentUser() : JSON.parse(localStorage.getItem('doma_current_user') || 'null');
-
-  const navAgentBtn = document.querySelector('#nav-agent-cta-btn');
-  const navDashLink = document.querySelector('#nav-custom-dash-link');
-  const navAdminLink = document.querySelector('#nav-admin-link');
-
-  if (navDashLink) {
-    navDashLink.style.display = currentUser ? 'inline-block' : 'none';
-  }
-  if (navAdminLink) {
-    navAdminLink.style.display = (currentUser && currentUser.role === 'admin') ? 'inline-block' : 'none';
-  }
-
-  if (navAgentBtn) {
-    if (currentUser && currentUser.fullName) {
-      const firstName = currentUser.fullName.split(' ')[0];
-      if (currentUser.role === 'student') {
-        navAgentBtn.innerHTML = `
-          <span style="font-size:1rem;">🎓</span>
-          <span>${escapeHtml(firstName)} (${escapeHtml((currentUser.university || 'Student').split(' ')[0])})</span>
-        `;
-        navAgentBtn.setAttribute('href', 'dashboard.html');
-      } else if (currentUser.role === 'tenant') {
-        navAgentBtn.innerHTML = `
-          <span style="font-size:1rem;">🏠</span>
-          <span>Tenant: ${escapeHtml(firstName)}</span>
-        `;
-        navAgentBtn.setAttribute('href', 'dashboard.html');
-      } else if (currentUser.role === 'agent') {
-        navAgentBtn.innerHTML = `
-          <span style="font-size:1rem;">💼</span>
-          <span>Agent: ${escapeHtml(firstName)}</span>
-        `;
-        navAgentBtn.setAttribute('href', 'agent-portal.html');
-      } else if (currentUser.role === 'admin') {
-        navAgentBtn.innerHTML = `
-          <span style="font-size:1rem;">🛡️</span>
-          <span>Admin Console</span>
-        `;
-        navAgentBtn.setAttribute('href', 'admin.html');
-      }
-    } else if (currentAgent && currentAgent.name) {
-      const firstName = currentAgent.name.split(' ')[0];
-      navAgentBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        <span>Agent: ${escapeHtml(firstName)}</span>
-      `;
-      navAgentBtn.setAttribute('href', 'agent-portal.html');
-    } else {
-      navAgentBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-        <span>Sign In / Register</span>
-      `;
-      navAgentBtn.setAttribute('href', 'auth.html');
-    }
-  }
-}
-
-function updateAgentState() {
-  initUserState();
-}
-
-/* ==========================================================================
-   Listings Storage & Rendering (Supabase DB + Local Cache)
-   ========================================================================== */
-function initListingsManager() {
-  const saved = localStorage.getItem('doma_listings');
-  if (saved) {
-    try {
-      currentListings = JSON.parse(saved);
-    } catch (e) {
-      currentListings = [];
-    }
+async function loadListings() {
+  const remote = window.DOMA_CLOUD ? await window.DOMA_CLOUD.getListings() : null;
+  if (Array.isArray(remote)) {
+    currentListings = remote;
+    listingsAreSamples = false;
   } else {
-    currentListings = [...DEMO_LISTINGS];
-    localStorage.setItem('doma_listings', JSON.stringify(currentListings));
+    // Database unreachable: show read-only samples so the map still works
+    currentListings = DEMO_LISTINGS.map(l => ({ ...l, isSample: true }));
+    listingsAreSamples = true;
   }
+}
 
-  // Sync from Supabase in background if available
-  if (window.DOMA_CLOUD && window.DOMA_CLOUD.isSupabaseConnected()) {
-    window.DOMA_CLOUD.getListings().then(remoteListings => {
-      if (Array.isArray(remoteListings) && remoteListings.length > 0) {
-        currentListings = remoteListings;
-        if (document.querySelector('#properties-grid')) {
-          renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter, currentCampusFilter, currentBudgetFilter);
-        }
-      }
-    }).catch(e => console.warn('Supabase listings sync notice:', e));
-  }
+function isMyListing(item) {
+  return !!(currentAgent && item.agentId === currentAgent.id);
 }
 
 let currentCategoryFilter = 'all';
@@ -667,6 +526,13 @@ function initListingsPage() {
   if (urlBudget && budgetSelect) {
     currentBudgetFilter = urlBudget;
     budgetSelect.value = urlBudget;
+  }
+
+  const myListingsBtn = document.querySelector('#filter-my-listings');
+  if (myListingsBtn) myListingsBtn.hidden = !currentAgent;
+
+  if (listingsAreSamples) {
+    showToast('Could not reach the live database, so sample listings are shown for now.', 'info');
   }
 
   // Initial render with parsed filters
@@ -748,9 +614,9 @@ function initListingsPage() {
   if (uploadBtn) {
     uploadBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!currentAgent) {
-        showToast('Please submit agent KYC verification first to upload listings.');
-        setTimeout(() => { window.location.href = 'agent-portal.html'; }, 800);
+      if (!currentAgent || currentAgent.kycStatus !== 'verified') {
+        showToast('Only KYC-verified agents can upload. Taking you to the Agent Portal…', 'info');
+        setTimeout(() => { window.location.href = 'agent-portal.html'; }, 900);
       } else {
         openUploadModal();
       }
@@ -802,25 +668,13 @@ function initListingsPage() {
       }
     });
   });
-
-  const recenterBtn = document.querySelector('#btn-recenter-map');
-  if (recenterBtn && leafletMap) {
-    recenterBtn.addEventListener('click', () => {
-      leafletMap.setView([6.5244, 3.3792], 12);
-      showToast('Map centered on Lagos / Nigeria');
-    });
-  }
 }
 
 function loadDemoListings() {
-  currentListings = [...DEMO_LISTINGS];
-  try {
-    localStorage.setItem('doma_listings', JSON.stringify(currentListings));
-  } catch (e) {
-    console.error('Failed to save demo listings to localStorage', e);
-  }
+  currentListings = DEMO_LISTINGS.map(l => ({ ...l, isSample: true }));
+  listingsAreSamples = true;
   renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter, currentCampusFilter, currentBudgetFilter);
-  showToast('Verified sample listings loaded (including student hostels < ₦300k)! ⚡');
+  showToast('Showing sample listings for preview. These are not live properties.', 'info');
 }
 
 function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all', campusFilter = 'all', budgetFilter = 'all') {
@@ -842,7 +696,10 @@ function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all
   } else if (filter === 'under-300k') {
     filtered = currentListings.filter(l => (l.price || 0) <= 300000);
   } else if (filter === 'my-listings') {
-    filtered = currentListings.filter(l => l.agentId === (currentAgent ? currentAgent.id : ''));
+    filtered = currentListings.filter(isMyListing);
+  } else if (filter === 'saved') {
+    const saved = getWishlist();
+    filtered = currentListings.filter(l => saved.includes(l.id));
   }
 
   // Filter by State
@@ -884,7 +741,6 @@ function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all
     );
   }
 
-  const mapWrap = document.querySelector('#map-container-wrap');
   const isMapOnly = document.querySelector('.view-mode-btn.active')?.dataset.mode === 'map';
 
   if (filtered.length === 0) {
@@ -902,6 +758,9 @@ function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all
     } else if (filter === 'my-listings') {
       if (titleEl) titleEl.textContent = 'You Have Not Uploaded Any Listings Yet';
       if (descEl) descEl.textContent = 'Click "Upload Property / Hostel" to add your first verified listing!';
+    } else if (filter === 'saved') {
+      if (titleEl) titleEl.textContent = 'No saved listings yet';
+      if (descEl) descEl.textContent = 'Tap the heart on any property to save it here. Saved listings stay on this device.';
     } else {
       if (titleEl) titleEl.textContent = 'No Listings Uploaded Yet';
       if (descEl) descEl.textContent = 'The marketplace is ready for fresh verified listings. Register as an agent with KYC to upload pictures or video walkthroughs of student hostels, houses, or stores!';
@@ -930,17 +789,18 @@ function createPropertyCardElement(item) {
   article.dataset.category = item.type;
 
   let mediaHtml = '';
-  if (item.media && item.media.length > 0) {
-    const main = item.media[0];
+  const main = item.media && item.media[0];
+  const mainUrl = main ? safeMediaUrl(main.url) : '';
+  if (mainUrl) {
     if (main.type === 'video') {
       mediaHtml = `
         <video controls playsinline preload="metadata">
-          <source src="${escapeHtml(main.url)}">
+          <source src="${escapeHtml(mainUrl)}">
           Your browser does not support video playback.
         </video>
       `;
     } else {
-      mediaHtml = `<img src="${escapeHtml(main.url)}" alt="${escapeHtml(item.title)}" class="card-img" loading="lazy">`;
+      mediaHtml = `<img src="${escapeHtml(mainUrl)}" alt="${escapeHtml(item.title)}" class="card-img" loading="lazy" decoding="async">`;
     }
   } else {
     mediaHtml = `
@@ -977,23 +837,25 @@ function createPropertyCardElement(item) {
   } else if (isBudget) {
     campusHtml = `
       <div class="card-budget-pill">
-        ⚡ Student &amp; Budget Verified (&lt; ₦300k/yr)
+        ⚡ Budget friendly (&lt; ₦300k/yr)
       </div>
     `;
   }
 
   const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
   const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello, I saw your listing on DOMA: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}. Is it available?`)}`;
-  const isMyListing = currentAgent && item.agentId === currentAgent.id;
+  const isOwn = isMyListing(item);
+  const isSaved = getWishlist().includes(item.id);
 
   article.innerHTML = `
     <div class="card-media-wrapper">
       ${mediaHtml}
       <div class="card-badges-row">
         ${badgesHtml}
+        ${item.isSample ? '<span class="card-badge sample">Sample</span>' : ''}
       </div>
-      <button class="btn-favorite" data-id="${escapeHtml(item.id)}" aria-label="Save listing">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <button type="button" class="btn-favorite${isSaved ? ' saved' : ''}" aria-pressed="${isSaved}" aria-label="${isSaved ? 'Remove from saved' : 'Save listing'}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
       </button>
     </div>
     <div class="card-content">
@@ -1001,48 +863,45 @@ function createPropertyCardElement(item) {
       <h3 class="card-title">${escapeHtml(item.title)}</h3>
       ${campusHtml}
       ${item.distanceKm !== undefined ? `
-        <div style="display:inline-flex; align-items:center; gap:5px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.35); color: #93c5fd; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-bottom: 6px;">
+        <div class="card-distance-pill">
           📍 ${(item.distanceKm < 1 ? Math.round(item.distanceKm * 1000) + 'm' : item.distanceKm.toFixed(1) + ' km')} from you
         </div>
       ` : ''}
       <div class="card-location">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        ${item.address ? `${escapeHtml(item.address)}, ` : ''}${escapeHtml(item.area)}, ${escapeHtml(item.state)}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>${item.address ? `${escapeHtml(item.address)}, ` : ''}${escapeHtml(item.area)}, ${escapeHtml(item.state)}</span>
       </div>
       <div class="card-specs">
-        <div class="spec-item">${escapeHtml(item.spec1)}</div>
-        <div class="spec-item">${escapeHtml(item.spec2)}</div>
-        <div class="spec-item">Media: <strong>${item.media ? item.media.length : 0}</strong></div>
+        ${item.spec1 ? `<div class="spec-item">${escapeHtml(item.spec1)}</div>` : ''}
+        ${item.spec2 ? `<div class="spec-item">${escapeHtml(item.spec2)}</div>` : ''}
+        <div class="spec-item">📷 <strong>${item.media ? item.media.length : 0}</strong></div>
       </div>
       <div class="card-footer">
         <div class="agent-info">
-          <div class="agent-avatar">${item.agentName ? escapeHtml(item.agentName[0].toUpperCase()) : 'A'}</div>
+          <div class="agent-avatar" aria-hidden="true">${item.agentName ? escapeHtml(item.agentName[0].toUpperCase()) : 'A'}</div>
           <div>
-            <div class="agent-name">${escapeHtml(item.agentName || 'Agent')} <span style="color:#22c55e; font-size:0.7rem;">(KYC ✅)</span></div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(item.agentAgency || 'Verified Agent')}</div>
+            <div class="agent-name">${escapeHtml(item.agentName || 'Agent')}${item.isSample ? '' : ' <span class="kyc-tick" title="KYC-verified agent">✓ KYC</span>'}</div>
+            <div class="agent-agency">${escapeHtml(item.agentAgency || '')}</div>
           </div>
         </div>
-        <div style="display: flex; gap: 6px;">
-          <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-card-action" style="color: #22c55e;" title="Chat WhatsApp">
-            WhatsApp 💬
+        <div class="card-actions">
+          <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-card-action whatsapp" aria-label="Chat with agent on WhatsApp">
+            WhatsApp
           </a>
-          <button class="btn-card-action btn-find-directions-trigger" style="color: var(--yellow-500);" data-id="${escapeHtml(item.id)}">
-            Directions 🚗
+          <button type="button" class="btn-card-action btn-find-directions-trigger">
+            Directions
           </button>
         </div>
       </div>
-      ${isMyListing ? `
-        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
-          <button class="btn-delete-listing" data-id="${escapeHtml(item.id)}" style="color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer;">
-            🗑️ Delete My Listing
-          </button>
+      ${isOwn ? `
+        <div class="card-owner-row">
+          <button type="button" class="btn-delete-listing">🗑️ Delete my listing</button>
         </div>
       ` : ''}
     </div>
   `;
 
-  // Clicking anywhere on card synchronizes with Google Map
-  article.style.cursor = 'pointer';
+  // Clicking anywhere on card synchronizes with the map
   article.addEventListener('click', (e) => {
     if (e.target.closest('button') || e.target.closest('a')) return;
     if (leafletMap) {
@@ -1055,48 +914,44 @@ function createPropertyCardElement(item) {
 
   // Favorite toggle
   const favBtn = article.querySelector('.btn-favorite');
-  if (favBtn) {
-    favBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      let wishlist = JSON.parse(localStorage.getItem('doma_wishlist') || '[]');
-      const id = item.id;
-      if (wishlist.includes(id)) {
-        wishlist = wishlist.filter(x => x !== id);
-        favBtn.classList.remove('saved');
-        showToast('Removed from saved wishlist');
-      } else {
-        wishlist.push(id);
-        favBtn.classList.add('saved');
-        showToast('Saved to wishlist ❤️');
-      }
-      localStorage.setItem('doma_wishlist', JSON.stringify(wishlist));
-      updateWishlistBadge();
-    });
-  }
+  favBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    let wishlist = getWishlist();
+    const nowSaved = !wishlist.includes(item.id);
+    wishlist = nowSaved ? [...wishlist, item.id] : wishlist.filter(x => x !== item.id);
+    setWishlist(wishlist);
+    favBtn.classList.toggle('saved', nowSaved);
+    favBtn.setAttribute('aria-pressed', String(nowSaved));
+    favBtn.setAttribute('aria-label', nowSaved ? 'Remove from saved' : 'Save listing');
+    showToast(nowSaved ? 'Saved to your list ❤️' : 'Removed from saved');
+  });
 
-  // Directions trigger button
-  const dirBtn = article.querySelector('.btn-find-directions-trigger');
-  if (dirBtn) {
-    dirBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openDirectionsForListing(item);
-    });
-  }
+  article.querySelector('.btn-find-directions-trigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openDirectionsForListing(item);
+  });
 
-  // Delete button
   const deleteBtn = article.querySelector('.btn-delete-listing');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', () => {
-      if (confirm(`Delete listing "${item.title}"?`)) {
-        currentListings = currentListings.filter(l => l.id !== item.id);
-        localStorage.setItem('doma_listings', JSON.stringify(currentListings));
-        renderListingsGrid();
-        showToast('Listing removed successfully.');
-      }
-    });
+    deleteBtn.addEventListener('click', () => deleteListingWithConfirm(item));
   }
 
   return article;
+}
+
+async function deleteListingWithConfirm(item) {
+  if (!confirm(`Delete listing "${item.title}"? This cannot be undone.`)) return;
+  try {
+    await window.DOMA_CLOUD.deleteListing(item.id);
+    currentListings = currentListings.filter(l => l.id !== item.id);
+    if (document.querySelector('#properties-grid')) {
+      renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter, currentCampusFilter, currentBudgetFilter);
+    }
+    renderAgentMyListings();
+    showToast('Listing deleted.');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 /* ==========================================================================
@@ -1147,9 +1002,10 @@ function initInteractiveMap() {
 
   // Initialize Map centered on Nigeria (Lagos Hub viewport)
   leafletMap = L.map('interactive-map', {
-    zoomControl: false, // Using custom Google Maps-style zoom group
-    attributionControl: false
+    zoomControl: false // Using custom Google Maps-style zoom group
   }).setView([6.5244, 3.3792], 12);
+  // OpenStreetMap and Esri tiles require visible attribution
+  leafletMap.attributionControl.setPrefix(false);
 
   // Setup Street Tiles (OpenStreetMap) and Satellite Tiles (Esri World Imagery)
   streetTileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1583,7 +1439,7 @@ function refreshMapMarkers(listingsToDisplay = currentListings) {
 
     // Google Maps-Style Real Estate Price Tag HTML
     const markerHtml = `
-      <div class="gmap-price-marker ${markerClass}" id="price-marker-${escapeHtml(item.id)}" title="${escapeHtml(item.title)}">
+      <div class="gmap-price-marker ${markerClass}" data-listing-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)}">
         <span>${icon}</span>
         <span>${priceText}</span>
       </div>
@@ -1617,7 +1473,7 @@ function refreshMapMarkers(listingsToDisplay = currentListings) {
 function selectMapMarker(item, marker) {
   // Highlight active price pill
   document.querySelectorAll('.gmap-price-marker').forEach(m => m.classList.remove('active'));
-  const el = document.querySelector(`#price-marker-${item.id}`);
+  const el = document.querySelector(`.gmap-price-marker[data-listing-id="${CSS.escape(item.id)}"]`);
   if (el) el.classList.add('active');
 
   currentActiveMarker = marker;
@@ -1638,7 +1494,7 @@ function openGmapPropertyDrawer(item) {
 
   const lat = item.lat || 6.4474;
   const lng = item.lng || 3.4723;
-  const thumbUrl = item.media && item.media[0] ? item.media[0].url : 'assets/images/hero_student_hostel.jpg';
+  const thumbUrl = safeMediaUrl(item.media && item.media[0] && item.media[0].type !== 'video' ? item.media[0].url : '', 'assets/images/hero_student_hostel.jpg');
   const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
   const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello DOMA Agent, I am interested in your property: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}.`)}`;
   const gmapsDeepLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -1669,11 +1525,11 @@ function openGmapPropertyDrawer(item) {
       ${distHtml}
       ${campusHtml}
     </div>
-    <div style="font-size: 0.8rem; color: #aaa; display: flex; align-items: center; gap: 4px;">
+    <div class="gmap-drawer-address">
       📍 ${escapeHtml(item.address ? item.address + ', ' : '')}${escapeHtml(item.area)}, ${escapeHtml(item.state)}
     </div>
     <div class="gmap-drawer-actions">
-      <button type="button" class="gmap-drawer-btn primary" onclick="triggerDirectionsById('${escapeHtml(item.id)}')">
+      <button type="button" class="gmap-drawer-btn primary" data-drawer-action="directions">
         🚗 Directions
       </button>
       <a href="${gmapsDeepLink}" target="_blank" rel="noopener noreferrer" class="gmap-drawer-btn google-app">
@@ -1682,11 +1538,15 @@ function openGmapPropertyDrawer(item) {
       <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="gmap-drawer-btn whatsapp">
         💬 WhatsApp
       </a>
-      <button type="button" class="gmap-drawer-btn inspect" onclick="openViewingModalForListing('${escapeHtml(item.id)}')">
+      <button type="button" class="gmap-drawer-btn inspect" data-drawer-action="inspect">
         📅 Inspect
       </button>
     </div>
   `;
+
+  // Handlers are bound to this item directly; listing data never reaches inline JS
+  content.querySelector('[data-drawer-action="directions"]').addEventListener('click', () => openDirectionsForListing(item));
+  content.querySelector('[data-drawer-action="inspect"]').addEventListener('click', () => openScheduleModal(item));
 
   drawer.style.display = 'block';
 }
@@ -1698,17 +1558,18 @@ function closeGmapPropertyDrawer() {
   currentActiveMarker = null;
 }
 
-window.openViewingModalForListing = function(id) {
-  const modal = document.querySelector('#viewing-modal');
-  if (modal) modal.classList.add('open');
-};
+let scheduleTarget = null;
 
-window.triggerDirectionsById = function(id) {
-  const item = currentListings.find(l => l.id === id);
-  if (item) {
-    openDirectionsForListing(item);
-  }
-};
+function openScheduleModal(item) {
+  const modal = document.querySelector('#schedule-modal');
+  if (!modal) return;
+  scheduleTarget = item;
+  const nameEl = modal.querySelector('#modal-property-name');
+  if (nameEl) nameEl.textContent = `${item.title} — ${item.area}, ${item.state}`;
+  const dateEl = modal.querySelector('#viewing-date');
+  if (dateEl) dateEl.min = new Date().toISOString().slice(0, 10);
+  modal.classList.add('open');
+}
 
 function focusMapOnLocation(searchTerm) {
   if (!leafletMap || !searchTerm) return;
@@ -1771,7 +1632,9 @@ function openDirectionsForListing(item) {
 }
 
 function calculateAndDrawRoute(startKey, item) {
-  const hub = STARTING_HUBS[startKey] || STARTING_HUBS['tollgate'];
+  const hub = startKey === 'current' && currentUserGps
+    ? { name: 'your current location', lat: currentUserGps.lat, lng: currentUserGps.lng }
+    : (STARTING_HUBS[startKey] || STARTING_HUBS['tollgate']);
   const destLat = item.lat || 6.4474;
   const destLng = item.lng || 3.4723;
 
@@ -1811,19 +1674,19 @@ function calculateAndDrawRoute(startKey, item) {
     stepsList.innerHTML = `
       <li class="directions-step-item">
         <span class="step-num-badge">1</span>
-        <div>Depart from <strong>${hub.name}</strong> and merge onto the main arterial road.</div>
+        <div>Depart from <strong>${escapeHtml(hub.name)}</strong> and merge onto the main arterial road.</div>
       </li>
       <li class="directions-step-item">
         <span class="step-num-badge">2</span>
-        <div>Drive for approximately <strong>${(directDist * 0.6).toFixed(1)} km</strong> following navigation signs towards ${item.area}.</div>
+        <div>Drive for approximately <strong>${(directDist * 0.6).toFixed(1)} km</strong> following navigation signs towards ${escapeHtml(item.area)}.</div>
       </li>
       <li class="directions-step-item">
         <span class="step-num-badge">3</span>
-        <div>Turn towards <strong>${item.address || item.area}</strong>.</div>
+        <div>Turn towards <strong>${escapeHtml(item.address || item.area)}</strong>.</div>
       </li>
       <li class="directions-step-item">
         <span class="step-num-badge">4</span>
-        <div>Arrive at destination: <strong style="color:var(--yellow-500);">${item.title}</strong> (${item.state}).</div>
+        <div>Arrive at destination: <strong style="color:var(--yellow-500);">${escapeHtml(item.title)}</strong> (${escapeHtml(item.state)}).</div>
       </li>
     `;
   }
@@ -1855,81 +1718,98 @@ function calculateAndDrawRoute(startKey, item) {
 
 /* ==========================================================================
    Agent Portal Page Logic
+   KYC status is decided by admins in the database; this page only displays it.
    ========================================================================== */
+let editingKyc = false;
+
+const KYC_FORM_FIELDS = {
+  '#agent-fullname': 'name',
+  '#agent-agency': 'agency',
+  '#agent-phone': 'phone',
+  '#agent-state': 'state',
+  '#agent-cac': 'cac',
+  '#agent-nin': 'nin',
+  '#agent-idtype': 'idType',
+  '#agent-idnumber': 'idNumber',
+  '#agent-campus-focus': 'campusFocus',
+  '#agent-office-address': 'officeAddress'
+};
+
 function initAgentPortalPage() {
   const regForm = document.querySelector('#agent-reg-form');
   const logoutBtn = document.querySelector('#btn-agent-logout');
   const payFeeBtn = document.querySelector('#btn-pay-agent-fee');
   const openUploadBtn = document.querySelector('#btn-open-upload-modal');
-  const toggleKycBtn = document.querySelector('#btn-toggle-kyc-status');
+  const editKycBtn = document.querySelector('#btn-edit-kyc');
+  const cancelEditBtn = document.querySelector('#btn-cancel-kyc-edit');
 
   updateAgentPortalView();
 
   if (regForm) {
-    regForm.addEventListener('submit', (e) => {
+    regForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.querySelector('#agent-fullname')?.value.trim() || '';
-      const agency = document.querySelector('#agent-agency')?.value.trim() || '';
-      const phone = document.querySelector('#agent-phone')?.value.trim() || '';
-      const email = document.querySelector('#agent-email')?.value.trim() || '';
-      const state = document.querySelector('#agent-state')?.value || 'Lagos';
-      const cac = document.querySelector('#agent-cac')?.value.trim() || '';
-      const nin = document.querySelector('#agent-nin')?.value.trim() || '';
-      const idType = document.querySelector('#agent-idtype')?.value || 'NIMC Slip / National ID';
-      const idNumber = document.querySelector('#agent-idnumber')?.value.trim() || '';
-      const campusFocus = document.querySelector('#agent-campus-focus')?.value || 'General Residential & Commercial';
-      const officeAddress = document.querySelector('#agent-office-address')?.value.trim() || '';
-
-      currentAgent = {
-        id: 'AG-' + Math.floor(10000 + Math.random() * 90000),
-        name,
-        agency,
-        phone,
-        email,
-        state,
-        cac,
-        nin,
-        idType,
-        idNumber,
-        campusFocus,
-        officeAddress,
-        kycStatus: 'pending',
-        registeredAt: new Date().toLocaleDateString()
-      };
-
-      if (window.DOMA_CLOUD) {
-        window.DOMA_CLOUD.saveAgent(currentAgent);
-      } else {
-        localStorage.setItem('doma_agent', JSON.stringify(currentAgent));
+      const application = {};
+      for (const [selector, key] of Object.entries(KYC_FORM_FIELDS)) {
+        const el = regForm.querySelector(selector);
+        application[key] = el ? el.value.trim() : '';
       }
-      updateAgentState();
-      updateAgentPortalView();
-      showToast(`Welcome, Agent ${name}! KYC application submitted. Current status: Pending Review ⏳. An admin will verify your CAC & NIN.`);
+
+      if (!/^\d{11}$/.test(application.nin)) {
+        showToast('NIN / BVN must be exactly 11 digits.', 'error');
+        regForm.querySelector('#agent-nin')?.focus();
+        return;
+      }
+
+      const submitBtn = regForm.querySelector('button[type="submit"]');
+      const originalLabel = submitBtn ? submitBtn.textContent : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting…';
+      }
+
+      try {
+        currentAgent = await window.DOMA_CLOUD.submitAgentApplication(application);
+        editingKyc = false;
+        updateAgentPortalView();
+        showToast('KYC application submitted. An admin will review your CAC & NIN.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+        }
+      }
     });
   }
 
-  if (toggleKycBtn) {
-    toggleKycBtn.addEventListener('click', async () => {
-      if (!currentAgent) return;
-      const nextStatus = (currentAgent.kycStatus === 'verified') ? 'pending' : 'verified';
-      currentAgent.kycStatus = nextStatus;
-      if (window.DOMA_CLOUD) {
-        await window.DOMA_CLOUD.updateAgentKYC(currentAgent.id, nextStatus);
-      } else {
-        localStorage.setItem('doma_agent', JSON.stringify(currentAgent));
-      }
+  if (editKycBtn) {
+    editKycBtn.addEventListener('click', () => {
+      editingKyc = true;
       updateAgentPortalView();
-      showToast(`KYC status set to: ${nextStatus === 'verified' ? 'Verified 🟢' : 'Pending Review ⏳'}`);
+    });
+  }
+
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', () => {
+      editingKyc = false;
+      updateAgentPortalView();
     });
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('doma_agent');
-      currentAgent = null;
-      updateAgentState();
-      updateAgentPortalView();
-      showToast('Logged out of agent dashboard.');
+    logoutBtn.addEventListener('click', async () => {
+      await window.DOMA_CLOUD.signOut();
+      window.location.href = 'auth.html';
+    });
+  }
+
+  const switchAccountBtn = document.querySelector('#nav-signout-btn-alt');
+  if (switchAccountBtn) {
+    switchAccountBtn.addEventListener('click', async () => {
+      await window.DOMA_CLOUD.signOut();
+      window.location.href = 'auth.html?mode=signup&role=agent';
     });
   }
 
@@ -1941,205 +1821,181 @@ function initAgentPortalPage() {
 
   if (openUploadBtn) {
     openUploadBtn.addEventListener('click', () => {
-      if (currentAgent && currentAgent.kycStatus !== 'verified') {
-        showToast('⚠️ KYC Verification is pending admin review. You can approve it in the Admin Panel (Demo) to upload listings!');
+      if (!currentAgent || currentAgent.kycStatus !== 'verified') {
+        showToast('Your KYC is still under review. You can upload once an admin approves it.', 'info');
         return;
       }
       openUploadModal();
     });
   }
+
+  const myListings = document.querySelector('#agent-my-listings-container');
+  if (myListings) {
+    myListings.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'upload') {
+        openUploadModal();
+      } else if (btn.dataset.action === 'delete') {
+        const item = currentListings.find(l => l.id === btn.dataset.listingId);
+        if (item) deleteListingWithConfirm(item);
+      }
+    });
+  }
+}
+
+function showOnly(visibleSelector, selectors) {
+  selectors.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) el.hidden = sel !== visibleSelector;
+  });
 }
 
 function updateAgentPortalView() {
-  const activeDash = document.querySelector('#agent-active-dashboard');
-  const regBox = document.querySelector('#agent-registration-box');
+  const sections = ['#agent-gate-signed-out', '#agent-gate-wrong-role', '#agent-registration-box', '#agent-active-dashboard'];
   const uploadStudio = document.querySelector('#agent-upload-studio');
+  if (uploadStudio) uploadStudio.hidden = true;
 
-  if (currentAgent) {
-    // Check if status was updated by admin in DOMA_CLOUD / localStorage database
-    try {
-      const localDB = JSON.parse(localStorage.getItem('doma_agents_db') || '[]');
-      const dbMatch = localDB.find(a => a.id === currentAgent.id);
-      if (dbMatch && dbMatch.kycStatus) {
-        currentAgent.kycStatus = dbMatch.kycStatus;
-        currentAgent.rejectionReason = dbMatch.rejectionReason || '';
-      }
-    } catch (e) {}
-
-    if (activeDash) activeDash.style.display = 'flex';
-    if (regBox) regBox.style.display = 'none';
-    if (uploadStudio) uploadStudio.style.display = 'block';
-
-    const displayName = document.querySelector('#agent-display-name');
-    const displayAgency = document.querySelector('#agent-display-agency');
-    const badgeInitials = document.querySelector('#agent-badge-initials');
-    const kycBadge = document.querySelector('#agent-kyc-status-badge');
-    const toggleBtn = document.querySelector('#btn-toggle-kyc-status');
-
-    if (displayName) displayName.textContent = currentAgent.name || 'Accredited Agent';
-    if (displayAgency) displayAgency.textContent = `${currentAgent.agency || 'Agency'} • ${currentAgent.state || 'Nigeria'}`;
-    if (badgeInitials) {
-      const parts = (currentAgent.name || 'A G').trim().split(' ');
-      badgeInitials.textContent = (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || '')).toUpperCase();
-    }
-
-    const isVerified = (currentAgent.kycStatus || 'pending') === 'verified';
-    const isRejected = currentAgent.kycStatus === 'rejected';
-
-    if (kycBadge) {
-      if (isVerified) {
-        kycBadge.textContent = 'KYC Verified 🟢';
-        kycBadge.style.background = 'rgba(34, 197, 94, 0.15)';
-        kycBadge.style.color = '#22c55e';
-        kycBadge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
-      } else if (isRejected) {
-        kycBadge.textContent = 'KYC Rejected 🔴';
-        kycBadge.style.background = 'rgba(239, 68, 68, 0.15)';
-        kycBadge.style.color = '#ef4444';
-        kycBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      } else {
-        kycBadge.textContent = 'KYC Pending Review ⏳';
-        kycBadge.style.background = 'rgba(245, 158, 11, 0.15)';
-        kycBadge.style.color = '#f59e0b';
-        kycBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-      }
-    }
-
-    if (toggleBtn) {
-      toggleBtn.innerHTML = `<span>${isVerified ? 'Switch to KYC Pending (Demo)' : 'Approve KYC Status 🟢 (Demo)'}</span>`;
-    }
-
-    // Dynamic KYC Alert Banner
-    const alertBanner = document.querySelector('#agent-kyc-alert-banner');
-    if (alertBanner) {
-      alertBanner.style.display = 'block';
-      if (isVerified) {
-        alertBanner.style.background = 'rgba(34, 197, 94, 0.12)';
-        alertBanner.style.border = '1px solid rgba(34, 197, 94, 0.3)';
-        alertBanner.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-            <span><strong style="color: #22c55e;">🟢 KYC Verified &amp; Accredited:</strong> Your credentials (CAC: <code>${escapeHtml(currentAgent.cac)}</code>, NIN: <code>${escapeHtml(currentAgent.nin)}</code>) are approved under Nigerian regulatory standards. You are authorized to publish student hostels, houses, and stores.</span>
-            <a href="admin.html" style="font-size:0.8rem; color:var(--yellow-500); font-weight:800; text-decoration:underline;">Admin Panel 🔒</a>
-          </div>
-        `;
-      } else if (isRejected) {
-        alertBanner.style.background = 'rgba(239, 68, 68, 0.12)';
-        alertBanner.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-        alertBanner.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-            <span><strong style="color: #ef4444;">🔴 KYC Application Not Approved:</strong> ${escapeHtml(currentAgent.rejectionReason || 'Submitted documentation could not be verified by compliance.')}</span>
-            <a href="admin.html" style="font-size:0.8rem; color:var(--yellow-500); font-weight:800; text-decoration:underline;">Review in Admin Panel 🔒</a>
-          </div>
-        `;
-      } else {
-        alertBanner.style.background = 'rgba(245, 158, 11, 0.12)';
-        alertBanner.style.border = '1px solid rgba(245, 158, 11, 0.3)';
-        alertBanner.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-            <span><strong style="color: #f59e0b;">⏳ KYC Review in Progress:</strong> Your agent registration is under administrative verification. Once our compliance team approves your CAC &amp; NIN, you can publish listings.</span>
-            <a href="admin.html" style="font-size:0.82rem; color:var(--yellow-500); font-weight:800; text-decoration:underline; background:rgba(255,208,0,0.1); padding:4px 10px; border-radius:4px;">Open Admin Panel to Approve →</a>
-          </div>
-        `;
-      }
-    }
-
-    // Populate KYC Credentials Grid
-    const dashId = document.querySelector('#dash-agent-id');
-    const dashCac = document.querySelector('#dash-agent-cac');
-    const dashNin = document.querySelector('#dash-agent-nin');
-    const dashIdType = document.querySelector('#dash-agent-idtype');
-    const dashCampus = document.querySelector('#dash-agent-campus');
-    const dashAddress = document.querySelector('#dash-agent-address');
-
-    if (dashId) dashId.textContent = currentAgent.id || 'AG-10928';
-    if (dashCac) dashCac.textContent = currentAgent.cac || 'RC 1948201 (CAC Certified)';
-
-    if (dashNin) {
-      const rawNin = (currentAgent.nin || '28491028412').toString();
-      const maskedNin = rawNin.length >= 6
-        ? `${rawNin.slice(0, 4)}•••••${rawNin.slice(-2)}`
-        : rawNin;
-      dashNin.textContent = isVerified ? `${maskedNin} (Verified ✅)` : (isRejected ? `${maskedNin} (Rejected 🔴)` : `${maskedNin} (Pending ⏳)`);
-      dashNin.style.color = isVerified ? '#22c55e' : (isRejected ? '#ef4444' : '#f59e0b');
-    }
-
-    if (dashIdType) {
-      const docType = currentAgent.idType || 'NIMC National ID Slip';
-      const docNum = currentAgent.idNumber ? ` [${currentAgent.idNumber}]` : '';
-      dashIdType.textContent = docType + docNum;
-    }
-
-    if (dashCampus) {
-      dashCampus.textContent = currentAgent.campusFocus || 'UNILAG & Lagos Mainland';
-    }
-
-    if (dashAddress) {
-      const addr = currentAgent.officeAddress || 'Physical Office Verified';
-      dashAddress.textContent = addr.length > 32 ? addr.slice(0, 30) + '...' : addr;
-      dashAddress.title = addr;
-    }
-
-    const phoneInput = document.querySelector('#listing-agent-phone');
-    if (phoneInput && !phoneInput.value && currentAgent.phone) {
-      phoneInput.value = currentAgent.phone;
-    }
-
-    renderAgentMyListings();
-  } else {
-    if (activeDash) activeDash.style.display = 'none';
-    if (regBox) regBox.style.display = 'block';
-    if (uploadStudio) uploadStudio.style.display = 'none';
+  if (!currentUser) {
+    showOnly('#agent-gate-signed-out', sections);
+    return;
   }
+
+  if (currentUser.role !== 'agent') {
+    showOnly('#agent-gate-wrong-role', sections);
+    const roleEl = document.querySelector('#agent-gate-role');
+    if (roleEl) roleEl.textContent = currentUser.role;
+    return;
+  }
+
+  if (!currentAgent || editingKyc) {
+    showOnly('#agent-registration-box', sections);
+    prefillKycForm();
+    const cancelEditBtn = document.querySelector('#btn-cancel-kyc-edit');
+    if (cancelEditBtn) cancelEditBtn.hidden = !currentAgent;
+    return;
+  }
+
+  showOnly('#agent-active-dashboard', sections);
+
+  const isVerified = currentAgent.kycStatus === 'verified';
+  const isRejected = currentAgent.kycStatus === 'rejected';
+  if (uploadStudio) uploadStudio.hidden = !isVerified;
+
+  const displayName = document.querySelector('#agent-display-name');
+  const displayAgency = document.querySelector('#agent-display-agency');
+  const badgeInitials = document.querySelector('#agent-badge-initials');
+  const kycBadge = document.querySelector('#agent-kyc-status-badge');
+  const uploadBtn = document.querySelector('#btn-open-upload-modal');
+
+  if (displayName) displayName.textContent = currentAgent.name || 'Agent';
+  if (displayAgency) displayAgency.textContent = `${currentAgent.agency || 'Agency'} • ${currentAgent.state || 'Nigeria'}`;
+  if (badgeInitials) {
+    const parts = (currentAgent.name || 'A G').trim().split(/\s+/);
+    badgeInitials.textContent = (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || '')).toUpperCase();
+  }
+  if (uploadBtn) uploadBtn.disabled = !isVerified;
+
+  const status = isVerified ? 'verified' : (isRejected ? 'rejected' : 'pending');
+  if (kycBadge) {
+    kycBadge.className = `agent-status-tag ${status}`;
+    kycBadge.textContent = isVerified ? 'KYC Verified' : (isRejected ? 'KYC Rejected' : 'KYC Pending Review');
+  }
+
+  const alertBanner = document.querySelector('#agent-kyc-alert-banner');
+  if (alertBanner) {
+    alertBanner.hidden = false;
+    alertBanner.className = `kyc-alert ${status}`;
+    if (isVerified) {
+      alertBanner.innerHTML = '<strong>KYC verified.</strong> Your CAC and NIN have been approved. You can publish student hostels, houses and stores.';
+    } else if (isRejected) {
+      alertBanner.innerHTML = `<strong>KYC not approved:</strong> ${escapeHtml(currentAgent.rejectionReason || 'Your documents could not be verified.')} Update your details and resubmit.`;
+    } else {
+      alertBanner.innerHTML = '<strong>Review in progress.</strong> Our compliance team is checking your CAC and NIN. You can publish listings once you are approved.';
+    }
+  }
+
+  const editKycBtn = document.querySelector('#btn-edit-kyc');
+  if (editKycBtn) editKycBtn.textContent = isRejected ? 'Update & Resubmit KYC' : 'Edit KYC Details';
+
+  const setText = (sel, text) => {
+    const el = document.querySelector(sel);
+    if (el) el.textContent = text;
+  };
+
+  setText('#dash-agent-id', currentAgent.id || '—');
+  setText('#dash-agent-cac', currentAgent.cac || '—');
+  const rawNin = String(currentAgent.nin || '');
+  setText('#dash-agent-nin', rawNin.length >= 6 ? `${rawNin.slice(0, 4)}•••••${rawNin.slice(-2)}` : '—');
+  setText('#dash-agent-idtype', currentAgent.idType + (currentAgent.idNumber ? ` [${currentAgent.idNumber}]` : ''));
+  setText('#dash-agent-campus', currentAgent.campusFocus || 'General');
+  setText('#dash-agent-address', currentAgent.officeAddress || '—');
+
+  document.querySelectorAll('input[name="listing-agent-phone"]').forEach(input => {
+    if (!input.value && currentAgent.phone) input.value = currentAgent.phone;
+  });
+
+  renderAgentMyListings();
+}
+
+function prefillKycForm() {
+  const form = document.querySelector('#agent-reg-form');
+  if (!form) return;
+  const source = currentAgent || {
+    name: currentUser.fullName,
+    agency: currentUser.agency,
+    phone: currentUser.phone,
+    state: currentUser.state
+  };
+  for (const [selector, key] of Object.entries(KYC_FORM_FIELDS)) {
+    const el = form.querySelector(selector);
+    if (el && !el.value && source[key]) el.value = source[key];
+  }
+  const emailEl = form.querySelector('#agent-email');
+  if (emailEl) emailEl.value = currentUser.email;
 }
 
 function renderAgentMyListings() {
   const container = document.querySelector('#agent-my-listings-container');
   if (!container || !currentAgent) return;
 
-  const myListings = currentListings.filter(l => l.agentId === currentAgent.id);
+  const myListings = currentListings.filter(isMyListing);
   if (myListings.length === 0) {
     container.innerHTML = `
-      <div style="text-align: center; padding: 36px; background: #141414; border-radius: var(--radius-md); border: 1px dashed var(--glass-border);">
-        <p style="color: var(--text-secondary); margin-bottom: 12px;">You haven't uploaded any listings yet.</p>
-        <button class="btn-primary" onclick="openUploadModal()">+ Upload Your First House, Student Room, or Store</button>
+      <div class="empty-inline">
+        <p>You haven't uploaded any listings yet.</p>
+        ${currentAgent.kycStatus === 'verified' ? '<button type="button" class="btn-primary" data-action="upload">+ Upload your first listing</button>' : ''}
       </div>
     `;
-  } else {
-    container.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-        ${myListings.map(l => {
-          const isStudent = l.type === 'student';
-          const isStore = l.type === 'store';
-          const badgeClass = isStudent ? 'student' : (isStore ? 'gold' : '');
-          const badgeText = isStudent ? '🎓 STUDENT' : (isStore ? '🏪 STORE' : '🏠 HOUSE');
-          return `
-          <div style="background: #141414; border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="mini-listing-grid">
+      ${myListings.map(l => {
+        const isStudent = l.type === 'student';
+        const isStore = l.type === 'store';
+        const badgeClass = isStudent ? 'student' : (isStore ? 'gold' : '');
+        const badgeText = isStudent ? '🎓 Student' : (isStore ? '🏪 Store' : '🏠 House');
+        return `
+          <div class="mini-listing-card">
+            <div class="mini-listing-head">
               <span class="card-badge ${badgeClass}">${badgeText}</span>
-              <span style="font-weight: 800; color: var(--yellow-500);">${escapeHtml(l.priceFormatted)}</span>
+              <span class="mini-listing-price">${escapeHtml(l.priceFormatted)}</span>
             </div>
-            <h4 style="font-size: 0.95rem; color: var(--text-white); margin-bottom: 6px;">${escapeHtml(l.title)}</h4>
-            ${l.campus && l.campus !== 'none' ? `<p style="font-size: 0.78rem; color: #93c5fd; margin-bottom: 4px;">🎓 ${escapeHtml(l.campus)} ${l.campusDist ? `(${escapeHtml(l.campusDist)})` : ''}</p>` : ''}
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">📍 ${escapeHtml(l.area)}, ${escapeHtml(l.state)}</p>
-            <div style="display: flex; justify-content: space-between;">
-              <a href="listings.html" style="font-size: 0.82rem; color: var(--yellow-500); font-weight: 700;">View in Portal →</a>
-              <button onclick="deleteListingById('${escapeHtml(l.id)}')" style="color: #ef4444; font-size: 0.82rem; font-weight: 700; cursor: pointer;">Delete 🗑️</button>
+            <h4>${escapeHtml(l.title)}</h4>
+            ${l.campus && l.campus !== 'none' ? `<p class="mini-listing-campus">🎓 ${escapeHtml(l.campus)} ${l.campusDist ? `(${escapeHtml(l.campusDist)})` : ''}</p>` : ''}
+            <p class="mini-listing-loc">📍 ${escapeHtml(l.area)}, ${escapeHtml(l.state)}</p>
+            <div class="mini-listing-actions">
+              <a href="listings.html?filter=my-listings">View on map →</a>
+              <button type="button" class="btn-text-danger" data-action="delete" data-listing-id="${escapeHtml(l.id)}">Delete</button>
             </div>
           </div>
-        `}).join('')}
-      </div>
-    `;
-  }
+        `;
+      }).join('')}
+    </div>
+  `;
 }
-
-window.deleteListingById = function(id) {
-  if (confirm('Are you sure you want to delete this listing?')) {
-    currentListings = currentListings.filter(l => l.id !== id);
-    localStorage.setItem('doma_listings', JSON.stringify(currentListings));
-    renderAgentMyListings();
-    showToast('Listing deleted successfully.');
-  }
-};
 
 /* ==========================================================================
    Media Uploader (Pictures & Videos) & Coordinates Auto-Mapping
@@ -2154,7 +2010,15 @@ function initMediaUploader() {
     const preview = previewGrids[idx];
     if (!input) return;
 
-    dropzone.addEventListener('click', () => input.click());
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== input) input.click();
+    });
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
 
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -2178,16 +2042,21 @@ function initMediaUploader() {
     const parentContainer = previewGrid?.closest('.input-group') || previewGrid?.parentElement;
     const progressBar = parentContainer?.querySelector('.cloudinary-upload-progress');
     const progressFill = parentContainer?.querySelector('.cloudinary-upload-fill');
+    const useCloudinary = window.DOMA_CLOUD && window.DOMA_CLOUD.isCloudinaryConnected();
 
     for (const file of Array.from(files)) {
       const isVideo = file.type.startsWith('video');
       const isImage = file.type.startsWith('image');
       if (!isImage && !isVideo) continue;
 
-      if (window.DOMA_CLOUD && window.DOMA_CLOUD.isCloudinaryConnected()) {
+      if (uploadedMediaFiles.length >= MAX_MEDIA_FILES) {
+        showToast(`You can attach up to ${MAX_MEDIA_FILES} files per listing.`, 'info');
+        break;
+      }
+
+      if (useCloudinary) {
         if (progressBar) progressBar.style.display = 'block';
         if (progressFill) progressFill.style.width = '10%';
-        showToast(`Uploading "${file.name}" to Cloudinary CDN... ☁️`);
 
         try {
           const uploaded = await window.DOMA_CLOUD.uploadToCloudinary(file, (percent) => {
@@ -2195,18 +2064,15 @@ function initMediaUploader() {
           });
           uploadedMediaFiles.push(uploaded);
           renderPreviews(previewGrid);
-          showToast(`"${file.name}" hosted on Cloudinary! ✨`);
         } catch (cloudErr) {
           console.warn('Cloudinary upload error:', cloudErr);
-          showToast(`Cloudinary notice: ${cloudErr.message || 'using local preview'}`);
-          // Fallback to local
           if (isVideo) {
-            uploadedMediaFiles.push({ type: 'video', url: URL.createObjectURL(file), name: file.name });
+            showToast(`Could not upload "${file.name}": ${cloudErr.message}`, 'error');
           } else {
-            const comp = await compressImage(file, 1000, 0.75);
-            uploadedMediaFiles.push({ type: 'image', url: comp, name: file.name });
+            // Photos can still be attached as compressed inline images
+            uploadedMediaFiles.push({ type: 'image', url: await compressImage(file, 1000, 0.75), name: file.name });
+            renderPreviews(previewGrid);
           }
-          renderPreviews(previewGrid);
         } finally {
           if (progressBar) {
             setTimeout(() => {
@@ -2215,35 +2081,14 @@ function initMediaUploader() {
             }, 800);
           }
         }
+      } else if (isVideo) {
+        showToast('Video tours need CDN hosting (Cloudinary), which is not set up yet. Please add photos.', 'info');
       } else {
-        // Local compression / storage fallback
-        if (isVideo) {
-          if (file.size > 2.5 * 1024 * 1024) {
-            showToast(`Notice: Video exceeds 2.5MB browser quota. Connect Cloudinary in Admin Panel for unlimited CDN video hosting!`);
-            continue;
-          }
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            uploadedMediaFiles.push({
-              type: 'video',
-              url: e.target.result,
-              name: file.name
-            });
-            renderPreviews(previewGrid);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          try {
-            const compressedUrl = await compressImage(file, 1000, 0.75);
-            uploadedMediaFiles.push({
-              type: 'image',
-              url: compressedUrl,
-              name: file.name
-            });
-            renderPreviews(previewGrid);
-          } catch (err) {
-            console.error('Image compression error', err);
-          }
+        try {
+          uploadedMediaFiles.push({ type: 'image', url: await compressImage(file, 1000, 0.75), name: file.name });
+          renderPreviews(previewGrid);
+        } catch (err) {
+          console.error('Image compression error', err);
         }
       }
     }
@@ -2251,13 +2096,26 @@ function initMediaUploader() {
 
   function renderPreviews(previewGrid) {
     if (!previewGrid) return;
-    previewGrid.innerHTML = uploadedMediaFiles.map(item => `
-      <div class="media-preview-item">
-        ${item.type === 'video' ? `<video src="${escapeHtml(item.url)}" muted></video>` : `<img src="${escapeHtml(item.url)}" alt="Preview">`}
-        <span class="media-preview-tag">${item.type.toUpperCase()}${item.url.includes('cloudinary') ? ' ☁️' : ''}</span>
-      </div>
-    `).join('');
+    previewGrid.innerHTML = uploadedMediaFiles.map((item, idx) => {
+      const url = escapeHtml(safeMediaUrl(item.url));
+      return `
+        <div class="media-preview-item">
+          ${item.type === 'video' ? `<video src="${url}" muted></video>` : `<img src="${url}" alt="Preview ${idx + 1}">`}
+          <span class="media-preview-tag">${item.type === 'video' ? 'VIDEO' : 'PHOTO'}</span>
+          <button type="button" class="media-preview-remove" data-index="${idx}" aria-label="Remove file ${idx + 1}">&times;</button>
+        </div>
+      `;
+    }).join('');
   }
+
+  previewGrids.forEach(grid => {
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.media-preview-remove');
+      if (!btn) return;
+      uploadedMediaFiles.splice(Number(btn.dataset.index), 1);
+      renderPreviews(grid);
+    });
+  });
 
   // Upload Form Handlers
   const uploadForms = document.querySelectorAll('.upload-listing-form');
@@ -2265,14 +2123,8 @@ function initMediaUploader() {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (!currentAgent) {
-        showToast('Please register and submit your agent KYC first.');
-        setTimeout(() => { window.location.href = 'agent-portal.html'; }, 800);
-        return;
-      }
-
-      if (currentAgent.kycStatus !== 'verified') {
-        showToast('⚠️ Agent KYC pending admin review. You can approve it in the Admin Portal (Demo) to publish live listings!');
+      if (!currentAgent || currentAgent.kycStatus !== 'verified') {
+        showToast('Only KYC-verified agents can publish listings.', 'error');
         return;
       }
 
@@ -2286,6 +2138,11 @@ function initMediaUploader() {
       const campus = form.querySelector('[name="listing-campus"]')?.value || 'none';
       const campusDist = form.querySelector('[name="listing-campus-dist"]')?.value.trim() || '';
 
+      if (rawPrice <= 0) {
+        showToast('Please enter a rent price above ₦0.', 'error');
+        return;
+      }
+
       const defaultSpec1 = listingType === 'student' ? '1 Bed / Self-Contain' : (listingType === 'house' ? '3 Bedrooms' : '50 Sq M');
       const defaultSpec2 = listingType === 'student' ? (campusDist ? `${campusDist} to Gate` : 'Campus Corridor') : (listingType === 'house' ? '2 Bathrooms' : 'Prime Storefront');
 
@@ -2296,16 +2153,14 @@ function initMediaUploader() {
       // Geocoding Coordinates Match
       const coords = matchCoordinatesForArea(state, area);
 
-      const assignedCampus = campus !== 'none' 
-        ? campus 
+      const assignedCampus = campus !== 'none'
+        ? campus
         : (listingType === 'student' ? (currentAgent.campusFocus && !currentAgent.campusFocus.includes('General') ? currentAgent.campusFocus : 'Campus Corridor') : 'none');
       const assignedDist = campusDist || (listingType === 'student' ? 'Walking distance to campus' : '');
 
       const newListing = {
-        id: 'DOMA-' + Date.now().toString(36),
+        id: 'DOMA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         agentId: currentAgent.id,
-        agentName: currentAgent.name,
-        agentAgency: currentAgent.agency,
         agentPhone,
         type: listingType,
         title,
@@ -2321,20 +2176,30 @@ function initMediaUploader() {
         campusDist: assignedDist,
         lat: coords.lat,
         lng: coords.lng,
-        media: [...uploadedMediaFiles],
-        createdAt: new Date().toISOString()
+        media: [...uploadedMediaFiles]
       };
 
-      if (window.DOMA_CLOUD) {
-        await window.DOMA_CLOUD.saveListing(newListing);
-      } else {
-        currentListings.unshift(newListing);
-        try {
-          localStorage.setItem('doma_listings', JSON.stringify(currentListings));
-        } catch (storageErr) {
-          currentListings.shift();
-          showToast('Browser storage quota reached! Please connect Cloudinary in Admin Panel.');
-          return;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalLabel = submitBtn ? submitBtn.textContent : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Publishing…';
+      }
+
+      try {
+        const saved = await window.DOMA_CLOUD.saveListing(newListing);
+        if (listingsAreSamples) {
+          currentListings = [];
+          listingsAreSamples = false;
+        }
+        currentListings.unshift(saved);
+      } catch (err) {
+        showToast(err.message, 'error');
+        return;
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
         }
       }
 
@@ -2344,15 +2209,15 @@ function initMediaUploader() {
       document.querySelectorAll('.media-preview-grid').forEach(g => g.innerHTML = '');
       closeModal('#upload-modal');
 
-      const budgetNote = rawPrice <= 300000 ? ' (Badged as budget-friendly under ₦300k)' : '';
-      showToast(`Success! "${title}" is now live and pinned on map!${budgetNote} 🚀`);
+      const budgetNote = rawPrice <= 300000 ? ' It is badged as budget-friendly (under ₦300k).' : '';
+      showToast(`"${title}" is now live on the map.${budgetNote}`);
 
       if (document.querySelector('#properties-grid')) {
-        renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter);
+        renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter, currentCampusFilter, currentBudgetFilter);
         const listingsSec = document.querySelector('#listings-section');
         if (listingsSec) listingsSec.scrollIntoView({ behavior: 'smooth' });
       } else {
-        setTimeout(() => { window.location.href = 'listings.html'; }, 900);
+        renderAgentMyListings();
       }
     });
   });
@@ -2405,19 +2270,27 @@ function initPaymentPage() {
     currentTitle = 'Tenant Inspection Holding Deposit';
   }
 
-  updatePaymentDisplays(currentAmount, currentTitle);
-
   const serviceCards = document.querySelectorAll('.service-package-card');
-  serviceCards.forEach(card => {
-    card.addEventListener('click', () => {
-      serviceCards.forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      currentAmount = parseInt(card.dataset.amount);
-      currentTitle = card.dataset.title;
-      updatePaymentDisplays(currentAmount, currentTitle);
-      showToast(`Selected: ${currentTitle} (₦${currentAmount.toLocaleString()})`);
+  function selectServiceCard(card) {
+    serviceCards.forEach(c => {
+      c.classList.toggle('selected', c === card);
+      c.setAttribute('aria-checked', String(c === card));
     });
+    currentAmount = parseInt(card.dataset.amount, 10);
+    currentTitle = card.dataset.title;
+    updatePaymentDisplays(currentAmount, currentTitle);
+  }
+
+  serviceCards.forEach(card => {
+    card.addEventListener('click', () => selectServiceCard(card));
   });
+
+  const presetCard = serviceParam && document.querySelector(`.service-package-card[data-service="${CSS.escape(serviceParam)}"]`);
+  if (presetCard) {
+    selectServiceCard(presetCard);
+  } else {
+    updatePaymentDisplays(currentAmount, currentTitle);
+  }
 
   const tabs = document.querySelectorAll('.pay-channel-tab');
   const cardView = document.querySelector('#pay-card-form');
@@ -2460,7 +2333,7 @@ function initPaymentPage() {
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText('9948201948').then(() => {
-        showToast('Account Number 9948201948 copied to clipboard! 📋');
+        showToast('Demo account number copied.', 'info');
       });
     });
   }
@@ -2487,11 +2360,11 @@ function initPaymentPage() {
       receiptBox.querySelector('#receipt-amount').textContent = `₦${amt.toLocaleString()}`;
       receiptBox.querySelector('#receipt-channel').textContent = channel;
       receiptBox.querySelector('#receipt-desc').textContent = title;
-      receiptBox.querySelector('#receipt-ref').textContent = 'DOMA-NG-' + Math.floor(100000 + Math.random() * 900000);
+      receiptBox.querySelector('#receipt-ref').textContent = 'DEMO-' + Math.floor(100000 + Math.random() * 900000);
       receiptBox.querySelector('#receipt-date').textContent = new Date().toLocaleString();
     }
 
-    showToast(`Payment of ₦${amt.toLocaleString()} successful! Receipt generated. 🎉`);
+    showToast(`Demo checkout complete for ₦${amt.toLocaleString()}. No money was charged.`, 'info');
   }
 }
 
@@ -2546,21 +2419,43 @@ function initValuationPage() {
 }
 
 /* ==========================================================================
-   Modals & Toast
+   Modals
    ========================================================================== */
 function initModals() {
   document.querySelectorAll('.modal-close-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
     });
   });
 
+  // Click outside the dialog or press Escape to close
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.classList.remove('open');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // Inspection requests go straight to the agent on WhatsApp; nothing is stored by DOMA
   const viewingForm = document.querySelector('#viewing-form');
   if (viewingForm) {
     viewingForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      const name = viewingForm.querySelector('#viewing-name').value.trim();
+      const date = viewingForm.querySelector('#viewing-date').value;
+      if (!name || !date || !scheduleTarget) {
+        showToast('Please add your name and a preferred date.', 'error');
+        return;
+      }
+      const phone = (scheduleTarget.agentPhone || '').replace(/[^0-9]/g, '');
+      const when = new Date(`${date}T12:00:00`).toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' });
+      const message = `Hello, my name is ${name}. I found your listing on DOMA: "${scheduleTarget.title}" in ${scheduleTarget.area}, ${scheduleTarget.state}. Can I inspect it on ${when}?`;
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
       closeModal('#schedule-modal');
-      showToast('Inspection request booked! The agent will reach out on WhatsApp/Phone.');
       viewingForm.reset();
     });
   }
@@ -2569,33 +2464,4 @@ function initModals() {
 function closeModal(selector) {
   const modal = document.querySelector(selector);
   if (modal) modal.classList.remove('open');
-}
-
-function initToast() {
-  if (!document.querySelector('.toast-container')) {
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-  }
-}
-
-function showToast(message) {
-  const container = document.querySelector('.toast-container');
-  if (!container) return;
-
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-    <span>${message}</span>
-  `;
-
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
 }

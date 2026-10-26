@@ -3,329 +3,205 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In &amp; Register | Custom Account for Students, Tenants &amp; Agents - DOMA.ng</title>
-  <meta name="description" content="Sign in or register your custom DOMA account. Personalized experiences for Nigerian university students seeking budget hostels under ₦300k, residential tenants, and KYC-verified agents.">
+  <title>Sign In or Register | DOMA.ng</title>
+  <meta name="description" content="Sign in or create your DOMA account. Personalised feeds for Nigerian students seeking hostels under ₦300k, tenants, and KYC-verified agents.">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd000'><path d='M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
-  <!-- Supabase CDN Client SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .auth-page-wrapper {
-      min-height: calc(100vh - 80px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 50px 20px;
-      position: relative;
-    }
-
-    .auth-card {
-      width: 100%;
-      max-width: 580px;
-      background: #0d0d0d;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg);
-      padding: 40px 36px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 208, 0, 0.06);
-      position: relative;
-    }
-
-    .auth-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #ffd000, #3b82f6, #22c55e);
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    }
-
-    .auth-mode-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: #141414;
-      padding: 6px;
-      border-radius: var(--radius-md);
-      margin-bottom: 28px;
-      border: 1px solid var(--glass-border);
-    }
-
-    .auth-mode-btn {
-      padding: 11px;
-      text-align: center;
-      font-size: 0.92rem;
-      font-weight: 800;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-    }
-
-    .auth-mode-btn.active {
-      background: var(--yellow-500);
-      color: #000000;
-    }
-
-    .role-selection-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    @media (max-width: 600px) {
-      .role-selection-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .role-choice-card {
-      background: #141414;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      padding: 14px 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-    }
-
-    .role-choice-card:hover {
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
-
-    .role-choice-card.selected {
-      border-color: var(--yellow-500);
-      background: rgba(255, 208, 0, 0.08);
-    }
-
-    .role-choice-card.selected.student {
-      border-color: #60a5fa;
-      background: rgba(59, 130, 246, 0.1);
-    }
-
-    .role-icon {
-      font-size: 1.6rem;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .role-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      color: var(--text-white);
-      margin-bottom: 3px;
-    }
-
-    .role-sub {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      line-height: 1.25;
-    }
-
-    .quick-login-personas {
-      background: #121212;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-
-    .persona-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      background: #181818;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      margin-top: 8px;
-      color: var(--text-white);
-      font-size: 0.84rem;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      text-align: left;
-    }
-
-    .persona-btn:hover {
-      background: #222222;
-      border-color: var(--yellow-500);
-      transform: translateX(4px);
-    }
-  </style>
 </head>
-<body style="background: #080808;">
-  <!-- Toast Notification System -->
-  <div class="toast-container" id="toast-container"></div>
+<body>
+  <a class="skip-link" href="#maincontent">Skip to main content</a>
 
-  <!-- Header / Navbar -->
-  <header class="navbar">
-    <div class="container navbar-container">
-      <a href="index.html" class="brand-logo" aria-label="DOMA Home">
-        <div class="brand-symbol">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </div>
-        <div class="brand-name">DOMA<span>.ng</span></div>
+  <header class="site-header" id="main-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" aria-label="DOMA home">
+        <span class="brand-symbol" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </span>
+        <span class="brand-name">DOMA<span>.ng</span></span>
       </a>
 
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <a href="listings.html" class="nav-link" style="font-size: 0.9rem;">Browse Properties</a>
-        <a href="index.html" class="btn-secondary" style="font-size: 0.82rem; padding: 7px 14px;">← Back to Home</a>
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="listings.html" class="nav-link">Houses &amp; Stores</a></li>
+          <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
+          <li><a href="payment.html" class="nav-link">Payments</a></li>
+          <li><a href="valuation.html" class="nav-link">Valuation</a></li>
+          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My Dashboard</a></li>
+          <li id="nav-admin-item" hidden><a href="admin.html" class="nav-link nav-link-admin">Admin</a></li>
+          <li class="nav-mobile-only"><a href="listings.html?filter=saved" class="nav-link">Saved listings <span class="wishlist-count">0</span></a></li>
+          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out</button></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span class="btn-wishlist-label">Saved</span>
+          <span class="wishlist-count">0</span>
+        </a>
+        <a href="auth.html" class="btn-primary btn-account" id="nav-account-btn">
+          <span class="btn-icon" aria-hidden="true">👤</span>
+          <span class="btn-label">Sign In</span>
+        </a>
+        <button type="button" class="menu-toggle" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <main class="auth-page-wrapper">
+  <main id="maincontent" class="auth-page-wrapper">
     <div class="auth-card">
-      <!-- Toggle Sign In / Create Account -->
-      <div class="auth-mode-switch">
-        <button type="button" class="auth-mode-btn active" id="tab-btn-signin">Sign In</button>
-        <button type="button" class="auth-mode-btn" id="tab-btn-signup">Create Custom Account</button>
+
+      <!-- Already signed in -->
+      <div id="auth-signed-in-view" class="auth-view" hidden>
+        <div class="auth-heading">
+          <h1>You're signed in</h1>
+          <p>Signed in as <strong id="signed-in-email"></strong>.</p>
+        </div>
+        <div class="stack-actions">
+          <a href="dashboard.html" class="btn-primary btn-block" id="btn-continue">Continue to my account →</a>
+          <button type="button" class="btn-secondary btn-block" id="btn-signout-here">Sign out</button>
+        </div>
       </div>
 
-      <!-- =====================================================================
-           SECTION 1: SIGN IN VIEW
-           ===================================================================== -->
-      <div id="auth-signin-view">
-        <div style="text-align: center; margin-bottom: 22px;">
-          <h1 style="font-size: 1.7rem; font-weight: 900; color: var(--text-white); margin-bottom: 6px;">
-            Welcome Back to DOMA
-          </h1>
-          <p style="font-size: 0.88rem; color: var(--text-secondary);">
-            Sign in to access your customized student portal, saved houses wishlist, or agent dashboard.
-          </p>
+      <!-- Sign in / Create account switch -->
+      <div class="auth-mode-switch" id="auth-mode-switch" role="tablist" aria-label="Account">
+        <button type="button" class="auth-mode-btn active" id="tab-btn-signin" role="tab" aria-selected="true" aria-controls="auth-signin-view">Sign In</button>
+        <button type="button" class="auth-mode-btn" id="tab-btn-signup" role="tab" aria-selected="false" aria-controls="auth-signup-view">Create Account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <div id="auth-signin-view" class="auth-view" role="tabpanel">
+        <div class="auth-heading">
+          <h1>Welcome back</h1>
+          <p>Sign in to see your campus feed, saved homes, or agent dashboard.</p>
         </div>
 
-        <!-- 1-Click Fast Persona Login (Convenient Demo Testing) -->
-        <div class="quick-login-personas">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <span style="font-size: 0.78rem; font-weight: 800; color: var(--yellow-500); text-transform: uppercase;">
-              ⚡ 1-Click Demo Profiles (Instant Sign In)
-            </span>
-            <span style="font-size: 0.72rem; color: var(--text-muted);">Pre-configured accounts</span>
+        <form id="signin-form" novalidate>
+          <div class="input-group">
+            <label for="signin-email">Email address</label>
+            <input type="email" id="signin-email" class="input-control" required autocomplete="email" placeholder="you@example.com">
           </div>
 
-          <button type="button" class="persona-btn" onclick="quickFillUser('tunde.student@unilag.edu.ng', 'password123')">
-            <span><strong>🎓 Student Account:</strong> Tunde Adeyemi</span>
-            <span style="font-size: 0.75rem; color: #93c5fd;">UNILAG • &lt; ₦300k Hub</span>
-          </button>
-
-          <button type="button" class="persona-btn" onclick="quickFillUser('amaka.okonkwo@gmail.com', 'password123')">
-            <span><strong>🏠 Tenant Account:</strong> Amaka Okonkwo</span>
-            <span style="font-size: 0.75rem; color: #86efac;">Lekki &amp; Abuja Houses</span>
-          </button>
-
-          <button type="button" class="persona-btn" onclick="quickFillUser('babatunde@realty.ng', 'password123')">
-            <span><strong>💼 Agent Account:</strong> Babatunde Adeleke</span>
-            <span style="font-size: 0.75rem; color: var(--yellow-500);">KYC Verified 🟢</span>
-          </button>
-
-          <button type="button" class="persona-btn" onclick="quickFillUser('admin@doma.ng', 'admin123')">
-            <span><strong>🛡️ Super Admin:</strong> Compliance Board</span>
-            <span style="font-size: 0.75rem; color: #fca5a5;">Admin Approvals</span>
-          </button>
-        </div>
-
-        <form id="signin-form">
-          <div class="input-group" style="margin-bottom: 14px;">
-            <label for="signin-email">Email Address</label>
-            <input type="email" id="signin-email" class="input-control" required placeholder="e.g. tunde@student.unilag.edu.ng">
-          </div>
-
-          <div class="input-group" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between;">
+          <div class="input-group">
+            <div class="label-row">
               <label for="signin-password">Password</label>
-              <a href="#" style="font-size: 0.78rem; color: var(--yellow-500);" onclick="alert('Demo password for all accounts is: password123 (or admin123 for admin).')">Forgot password?</a>
+              <button type="button" class="link-btn" id="link-forgot">Forgot password?</button>
             </div>
-            <input type="password" id="signin-password" class="input-control" required placeholder="••••••••">
+            <input type="password" id="signin-password" class="input-control" required autocomplete="current-password" placeholder="Your password">
           </div>
 
-          <div id="signin-error" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 16px;"></div>
+          <div class="form-error" id="signin-error" role="alert" hidden></div>
 
-          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 50px; font-size: 1rem;">
-            Sign In to My Dashboard →
-          </button>
+          <button type="submit" class="btn-primary btn-block btn-lg">Sign In →</button>
         </form>
 
-        <div style="text-align: center; margin-top: 22px; font-size: 0.86rem; color: var(--text-secondary);">
-          Don't have an account yet? 
-          <a href="#" id="link-switch-to-signup" style="color: var(--yellow-500); font-weight: 700;">Create a custom account</a>
-        </div>
+        <p class="auth-switch-line">New to DOMA? <button type="button" class="link-btn" id="link-switch-to-signup">Create an account</button></p>
       </div>
 
-      <!-- =====================================================================
-           SECTION 2: CREATE CUSTOM ACCOUNT VIEW
-           ===================================================================== -->
-      <div id="auth-signup-view" style="display: none;">
-        <div style="text-align: center; margin-bottom: 22px;">
-          <h2 style="font-size: 1.7rem; font-weight: 900; color: var(--text-white); margin-bottom: 6px;">
-            Create Your Custom Account
-          </h2>
-          <p style="font-size: 0.88rem; color: var(--text-secondary);">
-            Choose your profile type to customize housing feeds, budget alerts, and verified agent permissions.
-          </p>
+      <!-- FORGOT PASSWORD -->
+      <div id="auth-forgot-view" class="auth-view" hidden>
+        <div class="auth-heading">
+          <h1>Reset your password</h1>
+          <p>Enter your email and we'll send you a link to choose a new password.</p>
+        </div>
+        <form id="forgot-form" novalidate>
+          <div class="input-group">
+            <label for="forgot-email">Email address</label>
+            <input type="email" id="forgot-email" class="input-control" required autocomplete="email">
+          </div>
+          <div class="form-error" id="forgot-error" role="alert" hidden></div>
+          <button type="submit" class="btn-primary btn-block btn-lg">Send reset link</button>
+        </form>
+        <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">← Back to sign in</button></p>
+      </div>
+
+      <!-- SET NEW PASSWORD (arrives here from the email link) -->
+      <div id="auth-reset-view" class="auth-view" hidden>
+        <div class="auth-heading">
+          <h1>Choose a new password</h1>
+          <p>Use at least 8 characters.</p>
+        </div>
+        <form id="reset-form" novalidate>
+          <div class="input-group">
+            <label for="reset-password">New password</label>
+            <input type="password" id="reset-password" class="input-control" required minlength="8" autocomplete="new-password">
+          </div>
+          <div class="form-error" id="reset-error" role="alert" hidden></div>
+          <button type="submit" class="btn-primary btn-block btn-lg">Save new password</button>
+        </form>
+      </div>
+
+      <!-- CHECK YOUR EMAIL -->
+      <div id="auth-check-email-view" class="auth-view" hidden>
+        <div class="auth-heading">
+          <div class="auth-big-icon" aria-hidden="true">✉️</div>
+          <h1>Check your email</h1>
+          <p id="check-email-text">We sent a confirmation link to your inbox. Open it to finish setting up your account.</p>
+        </div>
+        <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">← Back to sign in</button></p>
+      </div>
+
+      <!-- CREATE ACCOUNT -->
+      <div id="auth-signup-view" class="auth-view" role="tabpanel" hidden>
+        <div class="auth-heading">
+          <h1>Create your account</h1>
+          <p>Pick a profile so we can tailor listings, budgets and agent tools to you.</p>
         </div>
 
-        <!-- Role Selector Cards -->
-        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; display: block;">
-          SELECT YOUR PROFILE TYPE:
-        </label>
-        <div class="role-selection-grid">
-          <div class="role-choice-card selected student" data-role="student">
-            <span class="role-icon">🎓</span>
-            <div class="role-title">Student</div>
-            <div class="role-sub">Campus Hostels &amp; &lt; ₦300k</div>
+        <fieldset class="role-fieldset">
+          <legend>I am a…</legend>
+          <div class="role-selection-grid">
+            <label class="role-choice-card student">
+              <input type="radio" name="signup-role" value="student" checked>
+              <span class="role-icon" aria-hidden="true">🎓</span>
+              <span class="role-title">Student</span>
+              <span class="role-sub">Campus hostels &amp; &lt; ₦300k</span>
+            </label>
+            <label class="role-choice-card tenant">
+              <input type="radio" name="signup-role" value="tenant">
+              <span class="role-icon" aria-hidden="true">🏠</span>
+              <span class="role-title">Tenant / Family</span>
+              <span class="role-sub">Houses, flats &amp; stores</span>
+            </label>
+            <label class="role-choice-card agent">
+              <input type="radio" name="signup-role" value="agent">
+              <span class="role-icon" aria-hidden="true">💼</span>
+              <span class="role-title">Estate Agent</span>
+              <span class="role-sub">List properties after KYC</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <form id="signup-form" novalidate>
+          <div class="input-group">
+            <label for="signup-fullname">Full name</label>
+            <input type="text" id="signup-fullname" class="input-control" required maxlength="120" autocomplete="name" placeholder="e.g. Chinedu Eze">
           </div>
 
-          <div class="role-choice-card" data-role="tenant">
-            <span class="role-icon">🏠</span>
-            <div class="role-title">Tenant / Family</div>
-            <div class="role-sub">Houses, Flats &amp; Stores</div>
-          </div>
-
-          <div class="role-choice-card" data-role="agent">
-            <span class="role-icon">💼</span>
-            <div class="role-title">Estate Agent</div>
-            <div class="role-sub">Post Listings with KYC</div>
-          </div>
-        </div>
-
-        <form id="signup-form">
-          <input type="hidden" id="signup-role" value="student">
-
-          <div class="input-group" style="margin-bottom: 14px;">
-            <label for="signup-fullname">Full Name</label>
-            <input type="text" id="signup-fullname" class="input-control" required placeholder="e.g. Babatunde Adeleke / Chinedu Eze">
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div class="form-row">
             <div class="input-group">
-              <label for="signup-email">Email Address</label>
-              <input type="email" id="signup-email" class="input-control" required placeholder="name@email.com">
+              <label for="signup-email">Email address</label>
+              <input type="email" id="signup-email" class="input-control" required autocomplete="email" placeholder="name@email.com">
             </div>
-
             <div class="input-group">
-              <label for="signup-phone">WhatsApp / Phone</label>
-              <input type="tel" id="signup-phone" class="input-control" required placeholder="+234 803 123 4567">
+              <label for="signup-phone">WhatsApp / phone</label>
+              <input type="tel" id="signup-phone" class="input-control" required autocomplete="tel" placeholder="+234 803 123 4567">
             </div>
           </div>
 
-          <!-- Student-specific fields -->
-          <div id="fields-for-student" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: #93c5fd; margin-bottom: 10px;">
-              🎓 Student Academic &amp; Proximity Details
-            </div>
-
-            <div class="input-group" style="margin-bottom: 12px;">
-              <label style="color: var(--text-secondary); font-size: 0.82rem;">University / Higher Institution</label>
+          <!-- Student -->
+          <div class="role-fields student" data-role-fields="student">
+            <div class="role-fields-title">🎓 Your campus</div>
+            <div class="input-group">
+              <label for="signup-university">University / institution</label>
               <select id="signup-university" class="input-control">
                 <option value="UNILAG (Akoka)">University of Lagos (UNILAG), Akoka</option>
                 <option value="LASU (Ojo)">Lagos State University (LASU), Ojo</option>
@@ -334,83 +210,68 @@
                 <option value="YabaTech">Yaba College of Technology (Yaba)</option>
                 <option value="FUTA (Akure)">Federal Univ. of Tech Akure (FUTA)</option>
                 <option value="OAU (Ile-Ife)">Obafemi Awolowo University (OAU)</option>
-                <option value="Other Institution">Other Nigerian Institution</option>
+                <option value="Other Institution">Other Nigerian institution</option>
               </select>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-row">
               <div class="input-group">
-                <label style="color: var(--text-secondary); font-size: 0.82rem;">Target Annual Budget (₦)</label>
-                <input type="number" id="signup-student-budget" class="input-control" placeholder="e.g. 250000" value="250000">
-                <span style="font-size: 0.72rem; color: #22c55e;">Surfaces hostels under ₦300k</span>
+                <label for="signup-student-budget">Yearly budget (₦)</label>
+                <input type="number" id="signup-student-budget" class="input-control" min="0" step="1000" inputmode="numeric" value="250000">
               </div>
-
               <div class="input-group">
-                <label style="color: var(--text-secondary); font-size: 0.82rem;">Preferred Unit Type</label>
+                <label for="signup-student-roomtype">Preferred room</label>
                 <select id="signup-student-roomtype" class="input-control">
-                  <option value="Self-Contain Ensuite">Self-Contain Ensuite</option>
-                  <option value="Single Room Bedspace">Single Room Bedspace</option>
-                  <option value="Room and Parlour">Room &amp; Parlour</option>
-                  <option value="Shared Flat">Shared Student Flat</option>
+                  <option value="Self-Contain Ensuite">Self-contain ensuite</option>
+                  <option value="Single Room Bedspace">Single room bedspace</option>
+                  <option value="Room and Parlour">Room &amp; parlour</option>
+                  <option value="Shared Flat">Shared student flat</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- Tenant-specific fields -->
-          <div id="fields-for-tenant" style="display: none; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: #86efac; margin-bottom: 10px;">
-              🏠 Tenant Housing Preferences
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <!-- Tenant -->
+          <div class="role-fields tenant" data-role-fields="tenant" hidden>
+            <div class="role-fields-title">🏠 Where you want to live</div>
+            <div class="form-row">
               <div class="input-group">
-                <label style="color: var(--text-secondary); font-size: 0.82rem;">State in Nigeria</label>
+                <label for="signup-tenant-state">State</label>
                 <select id="signup-tenant-state" class="input-control">
-                  <option value="Lagos">Lagos State</option>
+                  <option value="Lagos">Lagos</option>
                   <option value="Abuja">Abuja (FCT)</option>
                   <option value="Rivers">Rivers (Port Harcourt)</option>
                   <option value="Oyo">Oyo (Ibadan)</option>
-                  <option value="Ogun">Ogun State</option>
+                  <option value="Ogun">Ogun</option>
                 </select>
               </div>
-
               <div class="input-group">
-                <label style="color: var(--text-secondary); font-size: 0.82rem;">Target Neighborhood</label>
-                <input type="text" id="signup-tenant-area" class="input-control" placeholder="e.g. Lekki Phase 1 / Maitama">
+                <label for="signup-tenant-area">Neighbourhood</label>
+                <input type="text" id="signup-tenant-area" class="input-control" maxlength="80" placeholder="e.g. Lekki Phase 1">
               </div>
             </div>
           </div>
 
-          <!-- Agent-specific notice -->
-          <div id="fields-for-agent" style="display: none; background: rgba(255, 208, 0, 0.08); border: 1px solid rgba(255, 208, 0, 0.25); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: var(--yellow-500); margin-bottom: 6px;">
-              💼 Estate Agent Accreditation
-            </div>
-            <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 10px;">
-              After creating your agent account, you will submit your CAC RC/BN and National ID (NIN) for verification. Once approved by our compliance board, you can publish property tours.
-            </p>
+          <!-- Agent -->
+          <div class="role-fields agent" data-role-fields="agent" hidden>
+            <div class="role-fields-title">💼 Agent accreditation</div>
+            <p class="role-fields-note">After signing up you'll submit your CAC number and NIN. You can publish listings once our compliance team approves them.</p>
             <div class="input-group">
-              <label style="color: var(--text-secondary); font-size: 0.82rem;">Agency / Enterprise Name</label>
-              <input type="text" id="signup-agent-agency" class="input-control" placeholder="e.g. Prime Sanctuary Realtors Ltd">
+              <label for="signup-agent-agency">Agency / business name</label>
+              <input type="text" id="signup-agent-agency" class="input-control" maxlength="120" placeholder="e.g. Prime Sanctuary Realtors Ltd">
             </div>
           </div>
 
-          <div class="input-group" style="margin-bottom: 20px;">
-            <label for="signup-password">Create Secure Password</label>
-            <input type="password" id="signup-password" class="input-control" required placeholder="Minimum 6 characters">
+          <div class="input-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" class="input-control" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
           </div>
 
-          <div id="signup-error" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: var(--radius-sm); font-size: 0.82rem; margin-bottom: 16px;"></div>
+          <div class="form-error" id="signup-error" role="alert" hidden></div>
 
-          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 50px; font-size: 1rem;">
-            Create My Custom Account →
-          </button>
+          <button type="submit" class="btn-primary btn-block btn-lg">Create Account →</button>
         </form>
 
-        <div style="text-align: center; margin-top: 22px; font-size: 0.86rem; color: var(--text-secondary);">
-          Already have an account? 
-          <a href="#" id="link-switch-to-signin" style="color: var(--yellow-500); font-weight: 700;">Sign in here</a>
-        </div>
+        <p class="auth-switch-line">Already have an account? <button type="button" class="link-btn" id="link-switch-to-signin">Sign in</button></p>
       </div>
     </div>
   </main>
@@ -418,163 +279,242 @@
   <footer class="site-footer">
     <div class="container">
       <div class="footer-bottom">
-        <div>&copy; 2026 DOMA Nigeria Real Estate Ltd. Secure User Accounts.</div>
-        <div style="display: flex; gap: 16px;">
-          <a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a>
-          <span>•</span>
-          <a href="agent-portal.html" style="color: var(--text-secondary);">Agent Portal</a>
-        </div>
+        <div>&copy; 2026 DOMA Nigeria. All rights reserved.</div>
+        <div>Always inspect a property in person before paying any money.</div>
       </div>
     </div>
   </footer>
 
-  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.js" integrity="sha256-JOjADcJdpCDudBBotgvNtfYss1mNiDQFis837G7hpyQ=" crossorigin="anonymous"></script>
   <script src="config.js"></script>
+  <script src="ui.js"></script>
   <script>
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = msg;
-      container.appendChild(t);
-      setTimeout(() => {
-        t.style.animation = 'fadeOut 0.3s forwards';
-        setTimeout(() => t.remove(), 300);
-      }, 3500);
+    const params = new URLSearchParams(window.location.search);
+    const views = {
+      signin: document.getElementById('auth-signin-view'),
+      signup: document.getElementById('auth-signup-view'),
+      forgot: document.getElementById('auth-forgot-view'),
+      reset: document.getElementById('auth-reset-view'),
+      checkEmail: document.getElementById('auth-check-email-view'),
+      signedIn: document.getElementById('auth-signed-in-view')
+    };
+    const modeSwitch = document.getElementById('auth-mode-switch');
+    const tabSignin = document.getElementById('tab-btn-signin');
+    const tabSignup = document.getElementById('tab-btn-signup');
+
+    const ROLE_HOME = { student: 'dashboard.html', tenant: 'dashboard.html', agent: 'agent-portal.html', admin: 'admin.html' };
+    const ALLOWED_NEXT = ['dashboard.html', 'agent-portal.html', 'admin.html', 'listings.html', 'payment.html'];
+
+    // Only same-site pages from a fixed list, so ?next= cannot send people elsewhere
+    function destinationFor(user) {
+      const next = params.get('next');
+      if (next && ALLOWED_NEXT.includes(next)) return next;
+      return ROLE_HOME[user.role] || 'dashboard.html';
     }
 
-    // Toggle between Sign In and Sign Up
-    const signinView = document.getElementById('auth-signin-view');
-    const signupView = document.getElementById('auth-signup-view');
-    const btnTabSignin = document.getElementById('tab-btn-signin');
-    const btnTabSignup = document.getElementById('tab-btn-signup');
-    const linkToSignup = document.getElementById('link-switch-to-signup');
-    const linkToSignin = document.getElementById('link-switch-to-signin');
-
-    function showSignIn() {
-      signinView.style.display = 'block';
-      signupView.style.display = 'none';
-      btnTabSignin.classList.add('active');
-      btnTabSignup.classList.remove('active');
+    function showView(name) {
+      Object.entries(views).forEach(([key, el]) => { el.hidden = key !== name; });
+      const isTabView = name === 'signin' || name === 'signup';
+      modeSwitch.hidden = !isTabView;
+      tabSignin.classList.toggle('active', name === 'signin');
+      tabSignup.classList.toggle('active', name === 'signup');
+      tabSignin.setAttribute('aria-selected', String(name === 'signin'));
+      tabSignup.setAttribute('aria-selected', String(name === 'signup'));
     }
 
-    function showSignUp() {
-      signinView.style.display = 'none';
-      signupView.style.display = 'block';
-      btnTabSignin.classList.remove('active');
-      btnTabSignup.classList.add('active');
+    function setError(id, message) {
+      const el = document.getElementById(id);
+      el.textContent = message || '';
+      el.hidden = !message;
     }
 
-    btnTabSignin.addEventListener('click', showSignIn);
-    btnTabSignup.addEventListener('click', showSignUp);
-    linkToSignup.addEventListener('click', (e) => { e.preventDefault(); showSignUp(); });
-    linkToSignin.addEventListener('click', (e) => { e.preventDefault(); showSignIn(); });
+    async function withBusy(form, label, fn) {
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = label;
+      try {
+        await fn();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    }
 
-    // Role selection in signup
-    const roleCards = document.querySelectorAll('.role-choice-card');
-    const roleInput = document.getElementById('signup-role');
-    const studentFields = document.getElementById('fields-for-student');
-    const tenantFields = document.getElementById('fields-for-tenant');
-    const agentFields = document.getElementById('fields-for-agent');
+    tabSignin.addEventListener('click', () => showView('signin'));
+    tabSignup.addEventListener('click', () => showView('signup'));
+    document.getElementById('link-switch-to-signup').addEventListener('click', () => showView('signup'));
+    document.getElementById('link-switch-to-signin').addEventListener('click', () => showView('signin'));
+    document.getElementById('link-forgot').addEventListener('click', () => {
+      document.getElementById('forgot-email').value = document.getElementById('signin-email').value;
+      showView('forgot');
+    });
+    document.querySelectorAll('[data-show]').forEach(btn => {
+      btn.addEventListener('click', () => showView(btn.dataset.show));
+    });
 
-    roleCards.forEach(card => {
-      card.addEventListener('click', () => {
-        roleCards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        const role = card.dataset.role;
-        roleInput.value = role;
+    // Role selection shows the matching extra fields
+    const roleInputs = document.querySelectorAll('input[name="signup-role"]');
+    function selectedRole() {
+      return document.querySelector('input[name="signup-role"]:checked').value;
+    }
+    function syncRoleFields() {
+      const role = selectedRole();
+      document.querySelectorAll('[data-role-fields]').forEach(el => {
+        el.hidden = el.dataset.roleFields !== role;
+      });
+    }
+    roleInputs.forEach(input => input.addEventListener('change', syncRoleFields));
 
-        studentFields.style.display = role === 'student' ? 'block' : 'none';
-        tenantFields.style.display = role === 'tenant' ? 'block' : 'none';
-        agentFields.style.display = role === 'agent' ? 'block' : 'none';
+    // SIGN IN
+    const signinForm = document.getElementById('signin-form');
+    signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+      if (!email || !password) {
+        setError('signin-error', 'Enter your email and password.');
+        return;
+      }
+      setError('signin-error', '');
+      await withBusy(signinForm, 'Signing in…', async () => {
+        try {
+          const user = await window.DOMA_CLOUD.signIn(email, password);
+          showToast(`Welcome back, ${user.fullName || user.email}!`);
+          window.location.href = destinationFor(user);
+        } catch (err) {
+          setError('signin-error', err.message);
+        }
       });
     });
 
-    // 1-Click Fast Fill for Testing
-    window.quickFillUser = function(email, password) {
-      document.getElementById('signin-email').value = email;
-      document.getElementById('signin-password').value = password;
-      showToast(`Selected persona: ${email}`);
-      document.getElementById('signin-form').dispatchEvent(new Event('submit'));
-    };
-
-    // Sign In Submission
-    document.getElementById('signin-form').addEventListener('submit', async (e) => {
+    // FORGOT PASSWORD
+    const forgotForm = document.getElementById('forgot-form');
+    forgotForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('signin-email').value.trim();
-      const password = document.getElementById('signin-password').value.trim();
-      const errorEl = document.getElementById('signin-error');
-
-      try {
-        errorEl.style.display = 'none';
-        const user = await window.DOMA_CLOUD.authenticateUser(email, password);
-        showToast(`Welcome back, ${user.fullName}! Redirecting... 🚀`);
-
-        setTimeout(() => {
-          if (user.role === 'admin') {
-            sessionStorage.setItem('doma_admin_token', 'admin_authorized_2026');
-            window.location.href = 'admin.html';
-          } else if (user.role === 'agent') {
-            window.location.href = 'agent-portal.html';
-          } else {
-            window.location.href = 'dashboard.html';
-          }
-        }, 600);
-      } catch (err) {
-        errorEl.textContent = err.message || 'Invalid email or password.';
-        errorEl.style.display = 'block';
-        showToast(err.message || 'Sign in failed');
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) {
+        setError('forgot-error', 'Enter the email you signed up with.');
+        return;
       }
+      setError('forgot-error', '');
+      await withBusy(forgotForm, 'Sending…', async () => {
+        try {
+          await window.DOMA_CLOUD.sendPasswordReset(email);
+          document.getElementById('check-email-text').textContent =
+            `If an account exists for ${email}, a password reset link is on its way.`;
+          showView('checkEmail');
+        } catch (err) {
+          setError('forgot-error', err.message);
+        }
+      });
     });
 
-    // Sign Up Submission
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    // SET NEW PASSWORD
+    const resetForm = document.getElementById('reset-form');
+    resetForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fullName = document.getElementById('signup-fullname').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const phone = document.getElementById('signup-phone').value.trim();
-      const password = document.getElementById('signup-password').value.trim();
-      const role = document.getElementById('signup-role').value;
-      const errorEl = document.getElementById('signup-error');
+      const password = document.getElementById('reset-password').value;
+      if (password.length < 8) {
+        setError('reset-error', 'Use at least 8 characters.');
+        return;
+      }
+      setError('reset-error', '');
+      await withBusy(resetForm, 'Saving…', async () => {
+        try {
+          await window.DOMA_CLOUD.updatePassword(password);
+          showToast('Password updated. You are signed in.');
+          const user = await window.DOMA_CLOUD.getCurrentUser();
+          window.location.href = user ? destinationFor(user) : 'dashboard.html';
+        } catch (err) {
+          setError('reset-error', err.message);
+        }
+      });
+    });
 
+    // CREATE ACCOUNT
+    const signupForm = document.getElementById('signup-form');
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const role = selectedRole();
       const formData = {
-        fullName,
-        email,
-        phone,
-        password,
-        role
+        role,
+        fullName: document.getElementById('signup-fullname').value.trim(),
+        email: document.getElementById('signup-email').value.trim(),
+        phone: document.getElementById('signup-phone').value.trim(),
+        password: document.getElementById('signup-password').value
       };
+
+      if (!formData.fullName || !formData.email || !formData.phone) {
+        setError('signup-error', 'Please fill in your name, email and phone number.');
+        return;
+      }
+      if (formData.password.length < 8) {
+        setError('signup-error', 'Your password needs at least 8 characters.');
+        return;
+      }
 
       if (role === 'student') {
         formData.university = document.getElementById('signup-university').value;
-        formData.targetBudget = parseFloat(document.getElementById('signup-student-budget').value) || 250000;
+        formData.targetBudget = parseFloat(document.getElementById('signup-student-budget').value) || null;
         formData.preferredType = document.getElementById('signup-student-roomtype').value;
       } else if (role === 'tenant') {
         formData.state = document.getElementById('signup-tenant-state').value;
         formData.preferredArea = document.getElementById('signup-tenant-area').value.trim();
       } else if (role === 'agent') {
-        formData.agency = document.getElementById('signup-agent-agency').value.trim() || `${fullName} Realtors`;
+        formData.agency = document.getElementById('signup-agent-agency').value.trim();
       }
 
-      try {
-        errorEl.style.display = 'none';
-        const createdUser = await window.DOMA_CLOUD.registerUser(formData);
-        showToast(`Congratulations, ${createdUser.fullName}! Account created. ✨`);
-
-        setTimeout(() => {
-          if (createdUser.role === 'agent') {
-            window.location.href = 'agent-portal.html';
-          } else {
-            window.location.href = 'dashboard.html';
+      setError('signup-error', '');
+      await withBusy(signupForm, 'Creating account…', async () => {
+        try {
+          const { user, needsConfirmation } = await window.DOMA_CLOUD.signUp(formData);
+          if (needsConfirmation) {
+            document.getElementById('check-email-text').textContent =
+              `We sent a confirmation link to ${formData.email}. Open it to finish setting up your account, then sign in.`;
+            showView('checkEmail');
+            return;
           }
-        }, 700);
-      } catch (err) {
-        errorEl.textContent = err.message || 'Registration error occurred.';
-        errorEl.style.display = 'block';
-        showToast(err.message || 'Registration error');
-      }
+          showToast(`Account created. Welcome, ${user.fullName || user.email}!`);
+          window.location.href = destinationFor(user);
+        } catch (err) {
+          setError('signup-error', err.message);
+        }
+      });
     });
+
+    document.getElementById('btn-signout-here').addEventListener('click', async () => {
+      await window.DOMA_CLOUD.signOut();
+      showView('signin');
+      renderHeaderAuthState();
+    });
+
+    // Arriving from a password-reset email puts us in recovery mode
+    window.DOMA_CLOUD.onAuthChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showView('reset');
+    });
+
+    (async function init() {
+      if (params.get('role')) {
+        const preset = document.querySelector(`input[name="signup-role"][value="${CSS.escape(params.get('role'))}"]`);
+        if (preset) preset.checked = true;
+      }
+      syncRoleFields();
+
+      if (params.get('mode') === 'reset') {
+        showView('reset');
+        return;
+      }
+
+      const user = await window.DOMA_CLOUD.getCurrentUser();
+      if (user) {
+        document.getElementById('signed-in-email').textContent = user.email;
+        document.getElementById('btn-continue').href = destinationFor(user);
+        showView('signedIn');
+      } else {
+        showView(params.get('mode') === 'signup' ? 'signup' : 'signin');
+      }
+    })();
   </script>
 </body>
 </html>

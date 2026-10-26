@@ -3,500 +3,356 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Custom Dashboard | DOMA Nigeria</title>
-  <meta name="description" content="Personalized housing dashboard for Nigerian university students, tenants, and verified real estate agents.">
+  <title>My Dashboard | DOMA.ng</title>
+  <meta name="description" content="Your personalised housing dashboard on DOMA: matched listings, saved homes and account details.">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd000'><path d='M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
-  <!-- Supabase CDN Client SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    .dashboard-header-card {
-      background: #111111;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-bottom: 28px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .dashboard-header-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--yellow-500);
-    }
-
-    .dashboard-header-card.student-theme::before {
-      background: linear-gradient(90deg, #3b82f6, #60a5fa, #ffd000);
-    }
-
-    .dashboard-header-card.tenant-theme::before {
-      background: linear-gradient(90deg, #22c55e, #ffd000);
-    }
-
-    .profile-pill-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      font-size: 0.8rem;
-      font-weight: 800;
-    }
-
-    .profile-pill-badge.student {
-      background: rgba(59, 130, 246, 0.15);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-    }
-
-    .profile-pill-badge.tenant {
-      background: rgba(34, 197, 94, 0.15);
-      color: #86efac;
-      border: 1px solid rgba(34, 197, 94, 0.4);
-    }
-
-    .profile-pill-badge.agent {
-      background: rgba(255, 208, 0, 0.15);
-      color: var(--yellow-500);
-      border: 1px solid rgba(255, 208, 0, 0.4);
-    }
-
-    .info-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-top: 20px;
-    }
-
-    .info-box {
-      background: #161616;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .info-box-lbl {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .info-box-val {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: var(--text-white);
-    }
-  </style>
 </head>
-<body style="background: #080808;">
-  <!-- Toast Notification System -->
-  <div class="toast-container" id="toast-container"></div>
+<body>
+  <a class="skip-link" href="#maincontent">Skip to main content</a>
 
-  <!-- Header / Navbar -->
-  <header class="navbar">
-    <div class="container navbar-container">
-      <a href="index.html" class="brand-logo" aria-label="DOMA Home">
-        <div class="brand-symbol">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </div>
-        <div class="brand-name">DOMA<span>.ng</span></div>
+  <header class="site-header" id="main-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" aria-label="DOMA home">
+        <span class="brand-symbol" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </span>
+        <span class="brand-name">DOMA<span>.ng</span></span>
       </a>
 
-      <nav aria-label="Dashboard Navigation">
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <ul class="nav-links">
           <li><a href="index.html" class="nav-link">Home</a></li>
           <li><a href="listings.html" class="nav-link">Houses &amp; Stores</a></li>
           <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
+          <li><a href="payment.html" class="nav-link">Payments</a></li>
           <li><a href="valuation.html" class="nav-link">Valuation</a></li>
+          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My Dashboard</a></li>
+          <li id="nav-admin-item" hidden><a href="admin.html" class="nav-link nav-link-admin">Admin</a></li>
+          <li class="nav-mobile-only"><a href="listings.html?filter=saved" class="nav-link">Saved listings <span class="wishlist-count">0</span></a></li>
+          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out</button></li>
         </ul>
       </nav>
 
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span id="user-top-tag" class="profile-pill-badge student">🎓 Student Account</span>
-        <button id="btn-dash-logout" class="btn-secondary" style="font-size: 0.82rem; padding: 6px 14px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
-          Sign Out
+      <div class="nav-actions">
+        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span class="btn-wishlist-label">Saved</span>
+          <span class="wishlist-count">0</span>
+        </a>
+        <a href="auth.html" class="btn-primary btn-account" id="nav-account-btn">
+          <span class="btn-icon" aria-hidden="true">👤</span>
+          <span class="btn-label">Sign In</span>
+        </a>
+        <button type="button" class="menu-toggle" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
     </div>
   </header>
-
-  <main style="padding: 40px 0 80px;">
+  <main id="maincontent" class="page-shell">
     <div class="container">
-      <!-- Customized User Header Card -->
-      <div id="dash-header-card" class="dashboard-header-card student-theme">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
-              <h1 id="dash-user-name" style="font-size: 2rem; font-weight: 900; color: var(--text-white);">
-                Welcome, Student!
-              </h1>
-              <span id="dash-role-badge" class="profile-pill-badge student">🎓 Nigerian Student</span>
+      <div id="dash-loading" class="page-loading" role="status">Loading your dashboard…</div>
+
+      <div id="dash-content" hidden>
+        <!-- Profile header -->
+        <section id="dash-header-card" class="dashboard-header-card" aria-labelledby="dash-user-name">
+          <div class="dashboard-header-top">
+            <div>
+              <div class="dashboard-title-row">
+                <h1 id="dash-user-name">Welcome back</h1>
+                <span id="dash-role-badge" class="profile-pill-badge"></span>
+              </div>
+              <p id="dash-user-subtitle" class="dashboard-subtitle"></p>
             </div>
-            <p id="dash-user-subtitle" style="font-size: 0.95rem; color: var(--text-secondary); max-width: 650px;">
-              Your personalized campus hub. We automatically prioritize student hostels close to your school and properties under ₦300,000/year.
-            </p>
+            <div class="dashboard-header-actions">
+              <a href="listings.html" class="btn-primary">🔍 Browse listings</a>
+              <button type="button" class="btn-secondary btn-danger-outline" id="btn-dash-logout">Sign out</button>
+            </div>
           </div>
+          <div class="info-summary-grid" id="dash-info-grid"></div>
+        </section>
 
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="listings.html" class="btn-primary" style="font-size: 0.88rem;">
-              🔍 Browse Marketplace
-            </a>
-            <a href="auth.html" class="btn-secondary" style="font-size: 0.88rem;">
-              Switch Profile
-            </a>
+        <!-- Personalised feed -->
+        <section class="dash-section" aria-labelledby="feed-title">
+          <div class="dash-section-head">
+            <div>
+              <span class="section-tag" id="feed-tag">For you</span>
+              <h2 id="feed-title">Matched listings</h2>
+            </div>
+            <a href="listings.html" id="feed-explore-link" class="text-link">View all in marketplace →</a>
           </div>
-        </div>
+          <div id="personalized-listings-grid" class="tile-grid"></div>
+        </section>
 
-        <!-- Custom Role Metadata Summary -->
-        <div class="info-summary-grid" id="dash-info-grid">
-          <!-- Populated dynamically based on role -->
-        </div>
-      </div>
-
-      <!-- =====================================================================
-           SECTION: RECOMMENDED LISTINGS (CUSTOMIZED FOR THIS USER)
-           ===================================================================== -->
-      <div style="margin-bottom: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <span class="section-tag" id="feed-tag">Personalized Feed</span>
-            <h2 id="feed-title" style="font-size: 1.5rem; font-weight: 800; color: var(--text-white);">
-              Hostels &amp; Rooms Matching Your Campus
-            </h2>
+        <!-- Saved -->
+        <section class="dash-section" id="saved" aria-labelledby="saved-title">
+          <div class="dash-section-head">
+            <h2 id="saved-title">❤️ Saved properties</h2>
+            <span id="saved-count-pill" class="muted-pill">0 saved</span>
           </div>
-          <a href="listings.html?filter=student" id="feed-explore-link" style="color: var(--yellow-500); font-weight: 700; font-size: 0.9rem;">
-            View All in Marketplace →
-          </a>
-        </div>
-
-        <div id="personalized-listings-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-          <!-- Dynamically populated property cards -->
-        </div>
-      </div>
-
-      <!-- =====================================================================
-           SECTION: SAVED WISHLIST
-           ===================================================================== -->
-      <div style="margin-top: 50px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-          <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-white);">
-            ❤️ My Saved Properties &amp; Accommodations
-          </h3>
-          <span id="saved-count-pill" style="font-size: 0.85rem; color: var(--text-muted);">0 Saved</span>
-        </div>
-
-        <div id="saved-wishlist-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
-          <!-- Saved items or empty state -->
-        </div>
+          <div id="saved-wishlist-grid" class="tile-grid"></div>
+        </section>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <div class="footer-bottom">
-        <div>&copy; 2026 DOMA Nigeria Real Estate Ltd. Customized Accounts for Nigerian Housing.</div>
-        <div style="display: flex; gap: 16px;">
-          <a href="admin.html" style="color: var(--yellow-500); font-weight: 800;">🔒 Admin Portal</a>
-          <span>•</span>
-          <a href="agent-portal.html" style="color: var(--text-secondary);">Agent Portal</a>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand-logo" aria-label="DOMA home">
+            <span class="brand-symbol" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </span>
+            <span class="brand-name">DOMA<span>.ng</span></span>
+          </a>
+          <p>Houses, student hostels and stores to let across Nigeria, listed by KYC-checked agents.</p>
         </div>
+
+        <div class="footer-col">
+          <h5>Explore</h5>
+          <ul class="footer-links">
+            <li><a href="listings.html?filter=house">Houses for rent</a></li>
+            <li><a href="listings.html?filter=student">Student hostels</a></li>
+            <li><a href="listings.html?filter=under-300k">Under ₦300k</a></li>
+            <li><a href="listings.html?filter=store">Stores to let</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Agents</h5>
+          <ul class="footer-links">
+            <li><a href="agent-portal.html">Agent portal</a></li>
+            <li><a href="auth.html?mode=signup&amp;role=agent">Register as an agent</a></li>
+            <li><a href="payment.html?service=verification">Verification fee</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Account</h5>
+          <ul class="footer-links">
+            <li><a href="auth.html">Sign in</a></li>
+            <li><a href="dashboard.html">My dashboard</a></li>
+            <li><a href="listings.html?filter=saved">Saved listings</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Legal</h5>
+          <ul class="footer-links">
+            <li><a href="#">Terms of service</a></li>
+            <li><a href="#">Privacy policy</a></li>
+            <li><a href="#">Agent code of conduct</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 DOMA Nigeria. All rights reserved.</div>
+        <div>Always inspect a property in person before paying any money.</div>
       </div>
     </div>
   </footer>
-
-  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.js" integrity="sha256-JOjADcJdpCDudBBotgvNtfYss1mNiDQFis837G7hpyQ=" crossorigin="anonymous"></script>
   <script src="config.js"></script>
+  <script src="ui.js"></script>
   <script>
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = msg;
-      container.appendChild(t);
-      setTimeout(() => {
-        t.style.animation = 'fadeOut 0.3s forwards';
-        setTimeout(() => t.remove(), 300);
-      }, 3500);
-    }
-
     let currentUser = null;
     let allListings = [];
 
-    async function initDashboard() {
-      // 1. Check if user is logged in
-      currentUser = window.DOMA_CLOUD.getCurrentUser();
-      if (!currentUser) {
-        // Fallback default student profile for immediate seamless preview
-        currentUser = {
-          id: 'USR-STU-001',
-          fullName: 'Tunde Adeyemi',
-          role: 'student',
-          email: 'tunde.student@unilag.edu.ng',
-          university: 'UNILAG (Akoka)',
-          targetBudget: 250000,
-          preferredType: 'Self-Contain Ensuite',
-          state: 'Lagos'
-        };
-        window.DOMA_CLOUD.setCurrentUser(currentUser);
-      }
+    const ROLE_META = {
+      student: { theme: 'student-theme', badge: '🎓 Student', feedTag: '🎓 Campus matches' },
+      tenant: { theme: 'tenant-theme', badge: '🏠 Tenant', feedTag: '🏠 Curated for you' },
+      agent: { theme: '', badge: '💼 Agent', feedTag: '💼 Live marketplace' },
+      admin: { theme: '', badge: '🛡️ Admin', feedTag: '💼 Live marketplace' }
+    };
 
-      // 2. Fetch all listings
-      allListings = await window.DOMA_CLOUD.getListings();
+    const naira = (n) => `₦${Number(n).toLocaleString()}`;
 
-      // 3. Render personalized view
-      renderUserProfile();
-      renderPersonalizedFeed();
-      renderWishlist();
+    function infoBox(label, value, tone = '') {
+      return `
+        <div class="info-box">
+          <div class="info-box-lbl">${escapeHtml(label)}</div>
+          <div class="info-box-val ${tone}">${value}</div>
+        </div>
+      `;
     }
 
-    function renderUserProfile() {
-      const headerCard = document.getElementById('dash-header-card');
-      const nameEl = document.getElementById('dash-user-name');
-      const roleBadge = document.getElementById('dash-role-badge');
-      const topTag = document.getElementById('user-top-tag');
-      const subtitle = document.getElementById('dash-user-subtitle');
-      const infoGrid = document.getElementById('dash-info-grid');
-      const feedTag = document.getElementById('feed-tag');
-      const feedTitle = document.getElementById('feed-title');
+    async function initDashboard() {
+      currentUser = await window.DOMA_CLOUD.getCurrentUser();
+      if (!currentUser) {
+        window.location.replace('auth.html?next=dashboard.html');
+        return;
+      }
 
-      nameEl.textContent = `Welcome back, ${currentUser.fullName}!`;
+      const [listings, agent] = await Promise.all([
+        window.DOMA_CLOUD.getListings(),
+        currentUser.role === 'agent' ? window.DOMA_CLOUD.getMyAgent() : Promise.resolve(null)
+      ]);
+      allListings = listings || [];
+
+      renderUserProfile(agent);
+      renderPersonalizedFeed();
+      renderWishlist();
+
+      document.getElementById('dash-loading').hidden = true;
+      document.getElementById('dash-content').hidden = false;
+    }
+
+    function renderUserProfile(agent) {
+      const meta = ROLE_META[currentUser.role] || ROLE_META.student;
+      const firstName = (currentUser.fullName || currentUser.email).split(' ')[0];
+
+      document.getElementById('dash-header-card').className = `dashboard-header-card ${meta.theme}`;
+      document.getElementById('dash-user-name').textContent = `Welcome back, ${firstName}`;
+      const roleBadge = document.getElementById('dash-role-badge');
+      roleBadge.className = `profile-pill-badge ${currentUser.role}`;
+      roleBadge.textContent = meta.badge;
+      document.getElementById('feed-tag').textContent = meta.feedTag;
+
+      const subtitle = document.getElementById('dash-user-subtitle');
+      const feedTitle = document.getElementById('feed-title');
+      const feedLink = document.getElementById('feed-explore-link');
+      const infoGrid = document.getElementById('dash-info-grid');
 
       if (currentUser.role === 'student') {
-        headerCard.className = 'dashboard-header-card student-theme';
-        roleBadge.className = 'profile-pill-badge student';
-        roleBadge.textContent = '🎓 Nigerian Student Member';
-        topTag.className = 'profile-pill-badge student';
-        topTag.textContent = `🎓 Student: ${currentUser.fullName.split(' ')[0]}`;
-
-        subtitle.textContent = `Your custom campus portal for ${currentUser.university || 'Nigerian universities'}. Properties under ₦300,000/year and proximity to your campus are prioritized.`;
-
-        feedTag.textContent = '🎓 Campus Matched Hostels';
-        feedTitle.textContent = `Student Accommodations near ${currentUser.university || 'Campus'}`;
-
-        infoGrid.innerHTML = `
-          <div class="info-box">
-            <div class="info-box-lbl">University / Campus</div>
-            <div class="info-box-val" style="color: #93c5fd;">${escapeHtml(currentUser.university || 'UNILAG (Akoka)')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Target Budget Limit</div>
-            <div class="info-box-val" style="color: #22c55e;">₦${(currentUser.targetBudget || 250000).toLocaleString()} / yr</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Preferred Room Type</div>
-            <div class="info-box-val">${escapeHtml(currentUser.preferredType || 'Self-Contain Ensuite')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Verification Status</div>
-            <div class="info-box-val" style="color: #22c55e;">Matric Verified ✅</div>
-          </div>
-        `;
+        const campus = currentUser.university || 'your campus';
+        subtitle.textContent = `Hostels near ${campus} and rooms within your budget are shown first.`;
+        feedTitle.textContent = `Student accommodation near ${campus}`;
+        feedLink.href = 'listings.html?filter=student';
+        infoGrid.innerHTML =
+          infoBox('University / campus', escapeHtml(currentUser.university || 'Not set'), 'tone-blue') +
+          infoBox('Yearly budget', currentUser.targetBudget ? `${naira(currentUser.targetBudget)} / yr` : 'Not set', 'tone-green') +
+          infoBox('Preferred room', escapeHtml(currentUser.preferredType || 'Any')) +
+          infoBox('Email', escapeHtml(currentUser.email));
       } else if (currentUser.role === 'tenant') {
-        headerCard.className = 'dashboard-header-card tenant-theme';
-        roleBadge.className = 'profile-pill-badge tenant';
-        roleBadge.textContent = '🏠 Verified Tenant';
-        topTag.className = 'profile-pill-badge tenant';
-        topTag.textContent = `🏠 Tenant: ${currentUser.fullName.split(' ')[0]}`;
-
-        subtitle.textContent = `Explore verified residential apartments, family duplexes, and commercial stores in ${currentUser.preferredArea || currentUser.state || 'Nigeria'}.`;
-
-        feedTag.textContent = '🏠 Curated for You';
-        feedTitle.textContent = `Houses & Properties in ${currentUser.preferredArea || currentUser.state || 'Nigeria'}`;
-
-        infoGrid.innerHTML = `
-          <div class="info-box">
-            <div class="info-box-lbl">Target Area</div>
-            <div class="info-box-val">${escapeHtml(currentUser.preferredArea || 'Lekki Phase 1, Lagos')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Budget Estimate</div>
-            <div class="info-box-val" style="color: var(--yellow-500);">₦${(currentUser.targetBudget || 3500000).toLocaleString()} / yr</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Preferred Type</div>
-            <div class="info-box-val">${escapeHtml(currentUser.preferredType || '3-Bedroom Flat')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Direct Agent Chats</div>
-            <div class="info-box-val" style="color: #22c55e;">Instant WhatsApp 💬</div>
-          </div>
-        `;
+        const place = currentUser.preferredArea || currentUser.state || 'Nigeria';
+        subtitle.textContent = `Apartments, family homes and stores in ${place}.`;
+        feedTitle.textContent = `Properties in ${place}`;
+        feedLink.href = 'listings.html?filter=house';
+        infoGrid.innerHTML =
+          infoBox('Target area', escapeHtml(currentUser.preferredArea || 'Not set')) +
+          infoBox('State', escapeHtml(currentUser.state || 'Not set')) +
+          infoBox('Budget', currentUser.targetBudget ? `${naira(currentUser.targetBudget)} / yr` : 'Not set', 'tone-yellow') +
+          infoBox('Email', escapeHtml(currentUser.email));
       } else {
-        // Agent or Admin
-        headerCard.className = 'dashboard-header-card';
-        roleBadge.className = 'profile-pill-badge agent';
-        roleBadge.textContent = '💼 Accredited Agent';
-        topTag.className = 'profile-pill-badge agent';
-        topTag.textContent = `💼 Agent: ${currentUser.fullName.split(' ')[0]}`;
+        subtitle.textContent = currentUser.role === 'agent'
+          ? 'Manage your KYC status and listings from the Agent Portal.'
+          : 'Review agent KYC applications and moderate listings in the Admin Console.';
+        feedTitle.textContent = 'Latest listings from verified agents';
+        feedLink.href = 'listings.html';
 
-        subtitle.textContent = 'Manage your verified agency listings, submit KYC credentials, and respond to inspection requests.';
+        const kyc = agent ? agent.kycStatus : null;
+        const kycLabel = kyc === 'verified' ? 'Verified' : kyc === 'rejected' ? 'Rejected' : kyc === 'pending' ? 'Pending review' : 'Not submitted';
+        const kycTone = kyc === 'verified' ? 'tone-green' : kyc === 'rejected' ? 'tone-red' : 'tone-amber';
+        const portal = currentUser.role === 'admin'
+          ? '<a href="admin.html" class="text-link">Admin Console →</a>'
+          : '<a href="agent-portal.html" class="text-link">Agent Portal →</a>';
 
-        feedTag.textContent = '💼 Active Marketplace';
-        feedTitle.textContent = 'Live Properties Uploaded by Verified Agents';
-
-        infoGrid.innerHTML = `
-          <div class="info-box">
-            <div class="info-box-lbl">Agent ID</div>
-            <div class="info-box-val" style="color: var(--yellow-500);">${escapeHtml(currentUser.agentId || 'AG-10928')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">KYC Verification</div>
-            <div class="info-box-val" style="color: #22c55e;">Approved 🟢</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Agency</div>
-            <div class="info-box-val">${escapeHtml(currentUser.agency || 'Prime Sanctuary')}</div>
-          </div>
-          <div class="info-box">
-            <div class="info-box-lbl">Post Listing</div>
-            <div class="info-box-val"><a href="agent-portal.html" style="color:var(--yellow-500); text-decoration:underline;">Upload Studio →</a></div>
-          </div>
-        `;
+        infoGrid.innerHTML = currentUser.role === 'agent'
+          ? infoBox('Agent ID', escapeHtml(agent ? agent.id : '—'), 'tone-yellow') +
+            infoBox('KYC status', kycLabel, kycTone) +
+            infoBox('Agency', escapeHtml((agent && agent.agency) || currentUser.agency || '—')) +
+            infoBox('Manage', portal)
+          : infoBox('Role', 'Administrator', 'tone-yellow') + infoBox('Manage', portal);
       }
+    }
+
+    function renderTile(item, { removable = false } = {}) {
+      const isStudent = item.type === 'student';
+      const isBudget = (item.price || 0) <= 300000;
+      const media = item.media && item.media[0];
+      const imgUrl = safeMediaUrl(media && media.type !== 'video' ? media.url : '', 'assets/images/hero_budget_selfcon.jpg');
+      const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
+      const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello, I saw your listing on DOMA: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}. I would like to inspect it.`)}`;
+
+      return `
+        <article class="listing-tile">
+          <div class="listing-tile-media">
+            <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">
+            <div class="listing-tile-badges">
+              ${isStudent ? '<span class="card-badge student">🎓 Student</span>' : (item.type === 'store' ? '<span class="card-badge gold">🏪 Store</span>' : '<span class="card-badge">🏠 House</span>')}
+              ${isBudget ? '<span class="card-badge budget">💰 &lt; ₦300k</span>' : ''}
+            </div>
+          </div>
+          <div class="listing-tile-body">
+            <div class="listing-tile-price">${escapeHtml(item.priceFormatted)} <span>${escapeHtml(item.period || '')}</span></div>
+            <h3 class="listing-tile-title">${escapeHtml(item.title)}</h3>
+            ${item.campus && item.campus !== 'none' ? `<div class="card-campus-pill">🎓 ${escapeHtml(item.campusDist || 'Near campus')} • ${escapeHtml(item.campus)}</div>` : ''}
+            <p class="listing-tile-loc">📍 ${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
+            <div class="listing-tile-actions">
+              <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">WhatsApp agent</a>
+              ${removable
+                ? `<button type="button" class="btn-secondary btn-sm" data-remove-id="${escapeHtml(item.id)}">Remove</button>`
+                : '<a href="listings.html" class="btn-secondary btn-sm">View on map</a>'}
+            </div>
+          </div>
+        </article>
+      `;
     }
 
     function renderPersonalizedFeed() {
       const container = document.getElementById('personalized-listings-grid');
-      let matching = [];
+      let matching = allListings;
 
       if (currentUser.role === 'student') {
-        const univ = (currentUser.university || '').toLowerCase();
-        // Match student listings, or campus match, or budget <= 300k
-        matching = allListings.filter(l => {
-          if (l.type === 'student') return true;
-          if (l.campus && l.campus !== 'none' && (univ.includes(l.campus.toLowerCase()) || l.campus.toLowerCase().includes('unilag'))) return true;
-          if ((l.price || 0) <= 300000) return true;
-          return false;
-        });
-
-        if (matching.length === 0) {
-          matching = allListings.slice(0, 4);
-        }
-      } else {
-        matching = allListings.slice(0, 6);
+        const univ = (currentUser.university || '').toLowerCase().split(' ')[0];
+        const budget = currentUser.targetBudget || 300000;
+        matching = allListings.filter(l =>
+          l.type === 'student' ||
+          (univ && l.campus && l.campus.toLowerCase().includes(univ)) ||
+          (l.price || 0) <= budget
+        );
+      } else if (currentUser.role === 'tenant') {
+        const area = (currentUser.preferredArea || '').toLowerCase();
+        const state = (currentUser.state || '').toLowerCase();
+        const inArea = allListings.filter(l =>
+          (area && (l.area || '').toLowerCase().includes(area)) ||
+          (state && (l.state || '').toLowerCase() === state)
+        );
+        if (inArea.length) matching = inArea;
       }
 
-      container.innerHTML = matching.map(item => {
-        const isStudent = item.type === 'student';
-        const isBudget = (item.price || 0) <= 300000;
-        const imgUrl = (item.media && item.media[0] && item.media[0].url) 
-          ? item.media[0].url 
-          : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80';
-
-        const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
-        const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello, I saw your listing on DOMA: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}. I am interested in inspecting it.`)}`;
-
-        return `
-          <div style="background: #111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column;">
-            <div style="height: 180px; position: relative;">
-              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;">
-              <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
-                ${isStudent ? '<span class="card-badge student">🎓 Student Hostel</span>' : '<span class="card-badge">🏠 House</span>'}
-                ${isBudget ? '<span class="card-badge budget">💰 &lt; ₦300k/yr</span>' : ''}
-              </div>
-            </div>
-
-            <div style="padding: 18px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <div style="font-size: 1.2rem; font-weight: 800; color: var(--yellow-500); margin-bottom: 4px;">
-                  ${escapeHtml(item.priceFormatted)} <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(item.period)}</span>
-                </div>
-                <h4 style="font-size: 0.96rem; color: var(--text-white); margin-bottom: 6px;">${escapeHtml(item.title)}</h4>
-                ${item.campus && item.campus !== 'none' ? `
-                  <div class="card-campus-pill" style="margin-bottom: 8px;">
-                    🎓 ${escapeHtml(item.campusDist || 'Near Campus')} • ${escapeHtml(item.campus)}
-                  </div>
-                ` : ''}
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">📍 ${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
-                <div style="font-size: 0.78rem; color: var(--text-secondary); background: #171717; padding: 6px 10px; border-radius: 4px; margin-bottom: 14px;">
-                  Agent: <strong>${escapeHtml(item.agentName || 'Verified Agent')}</strong> <span style="color:#22c55e;">(KYC ✅)</span>
-                </div>
-              </div>
-
-              <div style="display: flex; gap: 8px;">
-                <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="flex: 1; justify-content: center; font-size: 0.82rem; height: 38px;">
-                  Chat WhatsApp 💬
-                </a>
-                <a href="listings.html" class="btn-secondary" style="font-size: 0.82rem; height: 38px;">
-                  Map 🚗
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      matching = matching.slice(0, 6);
+      container.innerHTML = matching.length
+        ? matching.map(item => renderTile(item)).join('')
+        : `<div class="empty-inline"><p>No listings match your profile yet.</p><a href="listings.html" class="btn-primary btn-sm">Browse everything</a></div>`;
     }
 
     function renderWishlist() {
       const container = document.getElementById('saved-wishlist-grid');
-      const countPill = document.getElementById('saved-count-pill');
-      const wishlistIds = JSON.parse(localStorage.getItem('doma_wishlist') || '[]');
-
-      countPill.textContent = `${wishlistIds.length} Saved`;
-
+      const wishlistIds = getWishlist();
       const savedListings = allListings.filter(l => wishlistIds.includes(l.id));
+      document.getElementById('saved-count-pill').textContent = `${savedListings.length} saved`;
 
-      if (savedListings.length === 0) {
-        container.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 36px; background: #111; border: 1px dashed var(--glass-border); border-radius: var(--radius-md); color: var(--text-secondary);">
-            <p style="font-size: 1rem; color: var(--text-white); margin-bottom: 6px;">You haven't saved any listings yet ❤️</p>
-            <p style="font-size: 0.82rem; margin-bottom: 12px;">Click the heart icon on any hostel or house to save it to your wishlist.</p>
-            <a href="listings.html" class="btn-primary" style="font-size: 0.82rem; display: inline-flex;">Browse Listings</a>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = savedListings.map(item => `
-        <div style="background: #111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-weight: 800; color: var(--yellow-500);">${escapeHtml(item.priceFormatted)}</span>
-            <button onclick="removeFromWishlist('${escapeHtml(item.id)}')" style="color: #ef4444; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: transparent; border: none;">Remove 🗑️</button>
-          </div>
-          <h5 style="color: var(--text-white); font-size: 0.9rem; margin-bottom: 4px;">${escapeHtml(item.title)}</h5>
-          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">📍 ${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
-          <a href="listings.html" style="font-size: 0.8rem; color: var(--yellow-500); font-weight: 700;">View Details →</a>
-        </div>
-      `).join('');
+      container.innerHTML = savedListings.length
+        ? savedListings.map(item => renderTile(item, { removable: true })).join('')
+        : `<div class="empty-inline">
+             <p>You haven't saved any listings yet. Tap the heart on a property to keep it here.</p>
+             <a href="listings.html" class="btn-primary btn-sm">Browse listings</a>
+           </div>`;
     }
 
-    window.removeFromWishlist = function(id) {
-      let wishlist = JSON.parse(localStorage.getItem('doma_wishlist') || '[]');
-      wishlist = wishlist.filter(x => x !== id);
-      localStorage.setItem('doma_wishlist', JSON.stringify(wishlist));
-      showToast('Removed from saved wishlist');
+    document.getElementById('saved-wishlist-grid').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-id]');
+      if (!btn) return;
+      setWishlist(getWishlist().filter(id => id !== btn.dataset.removeId));
+      showToast('Removed from saved');
       renderWishlist();
-    };
+    });
 
-    document.getElementById('btn-dash-logout')?.addEventListener('click', () => {
-      window.DOMA_CLOUD.signOutUser();
-      showToast('Signed out of your account.');
-      setTimeout(() => { window.location.href = 'auth.html'; }, 600);
+    document.getElementById('btn-dash-logout').addEventListener('click', async () => {
+      await window.DOMA_CLOUD.signOut();
+      window.location.href = 'auth.html';
     });
 
     initDashboard();
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
   </script>
 </body>
 </html>
