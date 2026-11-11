@@ -19,6 +19,15 @@ let streetTileLayer = null;
 let satelliteTileLayer = null;
 let currentTileLayerType = 'dark'; // 'dark' | 'streets' | 'satellite'
 let currentActiveMarker = null;
+let activeListingId = null;
+let markerSource = []; // listings currently drawn on the map (before grouping)
+let campusLayer = null;
+let campusesVisible = true;
+
+const NIGERIA_BOUNDS = [[4.2, 2.6], [13.9, 14.7]];
+const CAMPUS_RADIUS_KM = 5; // "near campus" for filters and the campus panel
+const CAMPUS_ZONE_METRES = 3000; // shaded walking/okada zone drawn around each campus
+const CAMPUS_COLOURS = { federal: '#60a5fa', state: '#34d399', polytechnic: '#fbbf24' };
 
 // Nigerian Coordinates Reference Directory
 const NIGERIAN_GEO_DIRECTORY = {
@@ -28,7 +37,7 @@ const NIGERIAN_GEO_DIRECTORY = {
   'ikoyi': { lat: 6.4549, lng: 3.4357, state: 'Lagos', landmark: 'Bourdillon Road, Ikoyi' },
   'banana island': { lat: 6.4632, lng: 3.4545, state: 'Lagos', landmark: 'Banana Island, Ikoyi' },
   'ikeja': { lat: 6.5912, lng: 3.3515, state: 'Lagos', landmark: 'Isaac John St, Ikeja GRA' },
-  'gra': { lat: 6.5912, lng: 3.3515, state: 'Lagos', landmark: 'Ikeja GRA' },
+  'ikeja gra': { lat: 6.5912, lng: 3.3515, state: 'Lagos', landmark: 'Ikeja GRA' },
   'yaba': { lat: 6.5095, lng: 3.3711, state: 'Lagos', landmark: 'Herbert Macaulay Way, Yaba' },
   'sabo': { lat: 6.5050, lng: 3.3760, state: 'Lagos', landmark: 'Sabo Commercial Hub, Yaba' },
   'akoka': { lat: 6.5173, lng: 3.3934, state: 'Lagos', landmark: 'UNILAG Gate / Akoka Student Corridor' },
@@ -57,7 +66,18 @@ const NIGERIAN_GEO_DIRECTORY = {
   'ibadan': { lat: 7.4345, lng: 3.9065, state: 'Oyo', landmark: 'Bodija Estate, Ibadan' },
   'ui': { lat: 7.4443, lng: 3.9003, state: 'Oyo', landmark: 'University of Ibadan (UI), Agbowo' },
   'agbowo': { lat: 7.4410, lng: 3.9030, state: 'Oyo', landmark: 'Agbowo, UI Corridor, Ibadan' },
-  'bodija': { lat: 7.4350, lng: 3.9100, state: 'Oyo', landmark: 'Old Bodija / UI Corridor, Ibadan' }
+  'bodija': { lat: 7.4350, lng: 3.9100, state: 'Oyo', landmark: 'Old Bodija / UI Corridor, Ibadan' },
+  'benin city': { lat: 6.3350, lng: 5.6037, state: 'Edo', landmark: "King's Square / Ring Road, Benin City" },
+  'benin': { lat: 6.3350, lng: 5.6037, state: 'Edo', landmark: "Ring Road, Benin City" },
+  'ugbowo': { lat: 6.3985, lng: 5.6120, state: 'Edo', landmark: 'Ugbowo / UNIBEN Main Campus Corridor' },
+  'uniben': { lat: 6.4010, lng: 5.6110, state: 'Edo', landmark: 'University of Benin (UNIBEN), Ugbowo' },
+  'uselu': { lat: 6.3760, lng: 5.6150, state: 'Edo', landmark: 'Uselu / Lagos Road, Benin City' },
+  'ekenwan': { lat: 6.3290, lng: 5.5850, state: 'Edo', landmark: 'Ekenwan Road / UNIBEN Ekenwan Campus' },
+  'gra': { lat: 6.3170, lng: 5.6150, state: 'Edo', landmark: 'GRA, Benin City' },
+  'ikpoba hill': { lat: 6.3290, lng: 5.6540, state: 'Edo', landmark: 'Ikpoba Hill, Benin City' },
+  'sapele road': { lat: 6.3090, lng: 5.6200, state: 'Edo', landmark: 'Sapele Road, Benin City' },
+  'ekpoma': { lat: 6.7420, lng: 6.1390, state: 'Edo', landmark: 'Ekpoma Town / AAU Corridor' },
+  'auchi': { lat: 7.0670, lng: 6.2670, state: 'Edo', landmark: 'Auchi Town / Auchi Polytechnic' }
 };
 
 const STARTING_HUBS = {
@@ -68,7 +88,9 @@ const STARTING_HUBS = {
   'vi_lagos': { name: 'Ozumba Mbadiwe, VI', lat: 6.4310, lng: 3.4280 },
   'cbd_abuja': { name: 'Central Business District, Abuja', lat: 9.0578, lng: 7.4950 },
   'airport_abuja': { name: 'Nnamdi Azikiwe Airport, Abuja', lat: 9.0065, lng: 7.2631 },
-  'ph_gra': { name: 'Aba Road / Old GRA, Port Harcourt', lat: 4.8150, lng: 7.0450 }
+  'ph_gra': { name: 'Aba Road / Old GRA, Port Harcourt', lat: 4.8150, lng: 7.0450 },
+  'benin_ring_road': { name: "Ring Road (King's Square), Benin City", lat: 6.3350, lng: 5.6037 },
+  'uniben_gate': { name: 'UNIBEN main gate, Ugbowo', lat: 6.3985, lng: 5.6120 }
 };
 
 // Media: Canvas-based client-side image downscaler to stay within browser storage quota
@@ -106,6 +128,51 @@ function compressImage(file, maxDimension = 1000, quality = 0.75) {
 // Demo Listings for Nigerian testing corridors
 // Demo Listings for Nigerian testing corridors (Including Student Housing < ₦300k)
 const DEMO_LISTINGS = [
+  {
+    id: 'DOMA-student-uniben',
+    agentId: 'demo-agent-uniben',
+    agentName: 'Osaro Igbinedion',
+    agentAgency: 'Ugbowo Campus Homes',
+    agentPhone: '+2348000000101',
+    type: 'student',
+    title: 'Tiled Self-Contain near UNIBEN Main Gate',
+    price: 200000,
+    priceFormatted: '₦200,000',
+    period: '/year',
+    state: 'Edo',
+    area: 'Ugbowo, Benin City',
+    address: 'Off Ugbowo-Lagos Road, near UNIBEN Main Gate',
+    campus: 'UNIBEN (Benin City)',
+    campusDist: '6 mins walk to UNIBEN Main Gate',
+    spec1: 'Self-Contain Room',
+    spec2: 'Borehole & Prepaid Meter',
+    lat: 6.3962,
+    lng: 5.6148,
+    media: [{ type: 'image', url: 'assets/images/hero_budget_selfcon.jpg' }],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'DOMA-gra-benin',
+    agentId: 'demo-agent-uniben',
+    agentName: 'Osaro Igbinedion',
+    agentAgency: 'Ugbowo Campus Homes',
+    agentPhone: '+2348000000101',
+    type: 'house',
+    title: 'Modern 3-Bedroom Flat in GRA, Benin City',
+    price: 2500000,
+    priceFormatted: '₦2,500,000',
+    period: '/year',
+    state: 'Edo',
+    area: 'GRA, Benin City',
+    address: 'Off Ihama Road, GRA',
+    campus: 'none',
+    spec1: '3 Bedrooms',
+    spec2: 'Gated Compound & Parking',
+    lat: 6.3175,
+    lng: 5.6168,
+    media: [{ type: 'image', url: 'assets/images/hero_luxury_home.jpg' }],
+    createdAt: new Date().toISOString()
+  },
   {
     id: 'DOMA-student-unilag',
     agentId: 'demo-agent-unilag',
@@ -297,6 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Page-specific initializers
   if (document.querySelector('#hero-slider-section')) {
     initHeroSlider();
+    renderHomeLatest();
   }
   // Map first, so URL filters and search focus apply to it
   if (document.querySelector('#interactive-map')) {
@@ -322,89 +390,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 function initHeroSlider() {
   const slides = document.querySelectorAll('.hero-slide');
   const thumbBtns = document.querySelectorAll('.hero-thumb-btn');
-  const prevBtn = document.getElementById('hero-prev-btn');
-  const nextBtn = document.getElementById('hero-next-btn');
   const searchTabs = document.querySelectorAll('.search-tab');
   const categorySelect = document.getElementById('home-search-category');
-  const heroTitle = document.getElementById('hero-dynamic-title');
-  const heroSubtitle = document.getElementById('hero-dynamic-subtitle');
-
+  const heroSec = document.getElementById('hero-slider-section');
   if (!slides.length) return;
 
+  const SLIDE_DURATION = 6000;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let currentSlide = 0;
   let slideTimer = null;
-  const SLIDE_DURATION = 6000;
+
+  function setCategory(cat) {
+    searchTabs.forEach(t => {
+      const active = t.dataset.filter === cat;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-pressed', String(active));
+    });
+    if (categorySelect && cat) categorySelect.value = cat;
+  }
 
   function goToSlide(index) {
     currentSlide = (index + slides.length) % slides.length;
-
-    slides.forEach((s, i) => {
-      if (i === currentSlide) {
-        s.classList.add('active');
-      } else {
-        s.classList.remove('active');
-      }
-    });
-
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
     thumbBtns.forEach((btn, i) => {
-      if (i === currentSlide) {
-        btn.classList.add('active');
-        const prog = btn.querySelector('.thumb-progress');
-        if (prog) {
-          prog.style.animation = 'none';
-          void prog.offsetWidth; // trigger reflow
-          prog.style.animation = 'progressTimer 6s linear forwards';
+      const active = i === currentSlide;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', String(active));
+      const prog = btn.querySelector('.thumb-progress');
+      if (prog) {
+        prog.style.animation = 'none';
+        if (active && !reduceMotion) {
+          void prog.offsetWidth; // restart the progress bar
+          prog.style.animation = `progressTimer ${SLIDE_DURATION}ms linear forwards`;
         }
-      } else {
-        btn.classList.remove('active');
-        const prog = btn.querySelector('.thumb-progress');
-        if (prog) prog.style.animation = 'none';
       }
     });
-
-    const activeSlideEl = slides[currentSlide];
-    if (activeSlideEl) {
-      const cat = activeSlideEl.dataset.category;
-      const title = activeSlideEl.dataset.title;
-      const sub = activeSlideEl.dataset.subtitle;
-
-      if (title && heroTitle) {
-        const accent = document.createElement('span');
-        accent.className = 'gradient-text';
-        accent.textContent = 'directly from KYC-verified agents';
-        heroTitle.replaceChildren(document.createTextNode(title + ' '), document.createElement('br'), accent);
-      }
-      if (sub && heroSubtitle) {
-        heroSubtitle.textContent = sub;
-      }
-
-      // Sync search tabs
-      searchTabs.forEach(t => {
-        if (t.dataset.filter === cat) {
-          t.classList.add('active');
-        } else if (cat === 'all' && t.dataset.filter === 'all') {
-          t.classList.add('active');
-        } else {
-          t.classList.remove('active');
-        }
-      });
-
-      // Sync category select dropdown
-      if (categorySelect && cat) {
-        categorySelect.value = cat;
-      }
-    }
-  }
-
-  function startAutoSlide() {
-    stopAutoSlide();
-    slideTimer = setInterval(() => {
-      goToSlide(currentSlide + 1);
-    }, SLIDE_DURATION);
+    setCategory(slides[currentSlide].dataset.category);
   }
 
   function stopAutoSlide() {
     if (slideTimer) clearInterval(slideTimer);
+    slideTimer = null;
+  }
+
+  function startAutoSlide() {
+    stopAutoSlide();
+    if (reduceMotion) return;
+    slideTimer = setInterval(() => goToSlide(currentSlide + 1), SLIDE_DURATION);
   }
 
   thumbBtns.forEach((btn, idx) => {
@@ -414,38 +446,44 @@ function initHeroSlider() {
     });
   });
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      goToSlide(currentSlide - 1);
-      startAutoSlide();
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      goToSlide(currentSlide + 1);
-      startAutoSlide();
-    });
-  }
-
-  const heroSec = document.getElementById('hero-slider-section');
-  if (heroSec) {
-    heroSec.addEventListener('mouseenter', stopAutoSlide);
-    heroSec.addEventListener('mouseleave', startAutoSlide);
-  }
-
+  // Tabs pick the search category; they also show the matching photo when there is one
   searchTabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
+    tab.addEventListener('click', () => {
       const filter = tab.dataset.filter;
-      if (filter === 'house') { e.preventDefault(); goToSlide(0); }
-      else if (filter === 'student') { e.preventDefault(); goToSlide(1); }
-      else if (filter === 'store') { e.preventDefault(); goToSlide(2); }
-      else if (filter === 'under-300k') { e.preventDefault(); goToSlide(3); }
+      const slideIdx = Array.from(slides).findIndex(s => s.dataset.category === filter);
+      if (slideIdx >= 0) {
+        goToSlide(slideIdx);
+        startAutoSlide();
+      } else {
+        setCategory(filter);
+      }
     });
   });
 
+  if (heroSec) {
+    heroSec.addEventListener('mouseenter', stopAutoSlide);
+    heroSec.addEventListener('mouseleave', startAutoSlide);
+    heroSec.addEventListener('focusin', stopAutoSlide);
+  }
+
   goToSlide(0);
   startAutoSlide();
+}
+
+/* ==========================================================================
+   Homepage: latest listings rail
+   ========================================================================== */
+function renderHomeLatest() {
+  const grid = document.querySelector('#home-latest-grid');
+  const section = document.querySelector('#home-latest-section');
+  if (!grid || !section) return;
+
+  const latest = currentListings.slice(0, 6);
+  section.hidden = latest.length === 0;
+  const note = document.querySelector('#home-latest-note');
+  if (note) note.hidden = !listingsAreSamples;
+  grid.replaceChildren(...latest.map(createPropertyCardElement));
+  grid.removeAttribute('aria-busy');
 }
 
 /* ==========================================================================
@@ -642,6 +680,8 @@ function initListingsPage() {
       viewModeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const mode = btn.dataset.mode;
+      const legend = document.querySelector('.map-legend');
+      if (legend) legend.hidden = mode === 'grid';
 
       if (mode === 'map') {
         if (mapWrap) mapWrap.style.display = 'block';
@@ -683,6 +723,7 @@ function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all
   if (!grid || !emptyState) return;
 
   grid.innerHTML = '';
+  grid.removeAttribute('aria-busy');
 
   let filtered = currentListings;
 
@@ -712,13 +753,8 @@ function renderListingsGrid(filter = 'all', searchQuery = '', stateFilter = 'all
     if (campusFilter === 'any') {
       filtered = filtered.filter(l => l.type === 'student' || (l.campus && l.campus !== 'none'));
     } else {
-      const cf = campusFilter.toLowerCase();
-      filtered = filtered.filter(l => 
-        (l.campus && l.campus.toLowerCase().includes(cf)) ||
-        (l.area && l.area.toLowerCase().includes(cf)) ||
-        (l.title && l.title.toLowerCase().includes(cf)) ||
-        (l.address && l.address.toLowerCase().includes(cf))
-      );
+      const campus = findCampus(campusFilter);
+      if (campus) filtered = filtered.filter(l => isNearCampus(l, campus));
     }
   }
 
@@ -790,7 +826,7 @@ function createPropertyCardElement(item) {
 
   let mediaHtml = '';
   const main = item.media && item.media[0];
-  const mainUrl = main ? safeMediaUrl(main.url) : '';
+  const mainUrl = main ? safeMediaUrl(main.type === 'video' ? main.url : cardImage(main.url)) : '';
   if (mainUrl) {
     if (main.type === 'video') {
       mediaHtml = `
@@ -803,41 +839,17 @@ function createPropertyCardElement(item) {
       mediaHtml = `<img src="${escapeHtml(mainUrl)}" alt="${escapeHtml(item.title)}" class="card-img" loading="lazy" decoding="async">`;
     }
   } else {
-    mediaHtml = `
-      <div style="width:100%; height:100%; background: #141414; display: flex; align-items: center; justify-content: center; color: var(--yellow-500);">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-      </div>
-    `;
+    mediaHtml = `<div class="card-media-placeholder">${icon('image')}</div>`;
   }
 
-  const isStudent = item.type === 'student';
-  const isStore = item.type === 'store';
   const isBudget = (item.price || 0) <= 300000;
-
-  let badgesHtml = '';
-  if (isStudent) {
-    badgesHtml += `<span class="card-badge student">🎓 Student Hostel</span>`;
-  } else if (isStore) {
-    badgesHtml += `<span class="card-badge gold">🏪 Store to Let</span>`;
-  } else {
-    badgesHtml += `<span class="card-badge">🏠 House for Rent</span>`;
-  }
-
-  if (isBudget) {
-    badgesHtml += `<span class="card-badge budget">💰 Under ₦300k</span>`;
-  }
+  const mediaCount = item.media ? item.media.length : 0;
 
   let campusHtml = '';
   if (item.campus && item.campus !== 'none') {
     campusHtml = `
       <div class="card-campus-pill">
-        🎓 ${escapeHtml(item.campusDist || 'Near Campus')} • ${escapeHtml(item.campus)}
-      </div>
-    `;
-  } else if (isBudget) {
-    campusHtml = `
-      <div class="card-budget-pill">
-        ⚡ Budget friendly (&lt; ₦300k/yr)
+        ${icon('cap')}<span>${escapeHtml(item.campusDist || 'Near campus')} · ${escapeHtml(item.campus)}</span>
       </div>
     `;
   }
@@ -846,70 +858,77 @@ function createPropertyCardElement(item) {
   const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello, I saw your listing on DOMA: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}. Is it available?`)}`;
   const isOwn = isMyListing(item);
   const isSaved = getWishlist().includes(item.id);
+  const agentInitial = item.agentName ? escapeHtml(item.agentName.trim()[0].toUpperCase()) : 'A';
 
   article.innerHTML = `
     <div class="card-media-wrapper">
       ${mediaHtml}
       <div class="card-badges-row">
-        ${badgesHtml}
+        ${typeBadgeHtml(item.type)}
+        ${isBudget ? `<span class="card-badge budget">${icon('tag')}Under ₦300k</span>` : ''}
         ${item.isSample ? '<span class="card-badge sample">Sample</span>' : ''}
       </div>
       <button type="button" class="btn-favorite${isSaved ? ' saved' : ''}" aria-pressed="${isSaved}" aria-label="${isSaved ? 'Remove from saved' : 'Save listing'}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        ${icon('heart')}
       </button>
+      ${mediaCount > 1 ? `<span class="card-media-count">${icon('camera')}${mediaCount}</span>` : ''}
     </div>
     <div class="card-content">
-      <div class="card-price">${escapeHtml(item.priceFormatted)} <span>${escapeHtml(item.period)}</span></div>
+      <div class="card-price-row">
+        <div class="card-price">${escapeHtml(item.priceFormatted)}<span>${escapeHtml(item.period)}</span></div>
+        ${item.distanceKm !== undefined ? `
+          <span class="card-distance-pill">${icon('navigation')}${(item.distanceKm < 1 ? Math.round(item.distanceKm * 1000) + ' m' : item.distanceKm.toFixed(1) + ' km')}</span>
+        ` : ''}
+      </div>
       <h3 class="card-title">${escapeHtml(item.title)}</h3>
-      ${campusHtml}
-      ${item.distanceKm !== undefined ? `
-        <div class="card-distance-pill">
-          📍 ${(item.distanceKm < 1 ? Math.round(item.distanceKm * 1000) + 'm' : item.distanceKm.toFixed(1) + ' km')} from you
-        </div>
-      ` : ''}
       <div class="card-location">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--yellow-500)" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        ${icon('pin')}
         <span>${item.address ? `${escapeHtml(item.address)}, ` : ''}${escapeHtml(item.area)}, ${escapeHtml(item.state)}</span>
       </div>
-      <div class="card-specs">
-        ${item.spec1 ? `<div class="spec-item">${escapeHtml(item.spec1)}</div>` : ''}
-        ${item.spec2 ? `<div class="spec-item">${escapeHtml(item.spec2)}</div>` : ''}
-        <div class="spec-item">📷 <strong>${item.media ? item.media.length : 0}</strong></div>
-      </div>
+      ${campusHtml}
+      ${item.spec1 || item.spec2 ? `
+        <div class="card-specs">
+          ${item.spec1 ? `<span class="spec-item">${icon('bed')}${escapeHtml(item.spec1)}</span>` : ''}
+          ${item.spec2 ? `<span class="spec-item">${icon('sparkle')}${escapeHtml(item.spec2)}</span>` : ''}
+        </div>
+      ` : ''}
       <div class="card-footer">
         <div class="agent-info">
-          <div class="agent-avatar" aria-hidden="true">${item.agentName ? escapeHtml(item.agentName[0].toUpperCase()) : 'A'}</div>
-          <div>
-            <div class="agent-name">${escapeHtml(item.agentName || 'Agent')}${item.isSample ? '' : ' <span class="kyc-tick" title="KYC-verified agent">✓ KYC</span>'}</div>
+          <div class="agent-avatar" aria-hidden="true">${agentInitial}</div>
+          <div class="agent-text">
+            <div class="agent-name">
+              <span>${escapeHtml(item.agentName || 'Agent')}</span>
+              ${item.isSample ? '' : `<span class="kyc-tick" title="KYC-verified agent">${icon('shield')}</span>`}
+            </div>
             <div class="agent-agency">${escapeHtml(item.agentAgency || '')}</div>
           </div>
         </div>
         <div class="card-actions">
-          <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-card-action whatsapp" aria-label="Chat with agent on WhatsApp">
-            WhatsApp
+          <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-card-action whatsapp" aria-label="Chat with the agent on WhatsApp" title="WhatsApp">
+            ${icon('message')}
           </a>
-          <button type="button" class="btn-card-action btn-find-directions-trigger">
-            Directions
+          <button type="button" class="btn-card-action btn-find-directions-trigger" aria-label="Directions" title="Directions">
+            ${icon('navigation')}
           </button>
         </div>
       </div>
       ${isOwn ? `
         <div class="card-owner-row">
-          <button type="button" class="btn-delete-listing">🗑️ Delete my listing</button>
+          <button type="button" class="btn-delete-listing">${icon('trash')}Delete my listing</button>
         </div>
       ` : ''}
     </div>
   `;
 
-  // Clicking anywhere on card synchronizes with the map
+  // Clicking a card focuses it on the map, or opens the map page where there is none
   article.addEventListener('click', (e) => {
-    if (e.target.closest('button') || e.target.closest('a')) return;
-    if (leafletMap) {
-      const lat = item.lat || 6.4474;
-      const lng = item.lng || 3.4723;
-      leafletMap.flyTo([lat, lng], 14, { duration: 0.8 });
-      openGmapPropertyDrawer(item);
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('video')) return;
+    if (!leafletMap) {
+      window.location.href = `listings.html?q=${encodeURIComponent(item.area || '')}`;
+      return;
     }
+    leafletMap.flyTo([item.lat || 6.4474, item.lng || 3.4723], 14, { duration: 0.8 });
+    openGmapPropertyDrawer(item);
   });
 
   // Favorite toggle
@@ -923,7 +942,7 @@ function createPropertyCardElement(item) {
     favBtn.classList.toggle('saved', nowSaved);
     favBtn.setAttribute('aria-pressed', String(nowSaved));
     favBtn.setAttribute('aria-label', nowSaved ? 'Remove from saved' : 'Save listing');
-    showToast(nowSaved ? 'Saved to your list ❤️' : 'Removed from saved');
+    showToast(nowSaved ? 'Saved to your list' : 'Removed from saved');
   });
 
   article.querySelector('.btn-find-directions-trigger').addEventListener('click', (e) => {
@@ -991,19 +1010,21 @@ function calculateHaversineDistanceKm(lat1, lon1, lat2, lon2) {
 function formatDistanceBadge(km) {
   if (km === null || km === undefined) return '';
   if (km < 1) {
-    return `📍 ${Math.round(km * 1000)}m away`;
+    return `${Math.round(km * 1000)} m away`;
   }
-  return `📍 ${km.toFixed(1)} km away`;
+  return `${km.toFixed(1)} km away`;
 }
 
 function initInteractiveMap() {
   const mapEl = document.querySelector('#interactive-map');
   if (!mapEl || typeof L === 'undefined') return;
 
-  // Initialize Map centered on Nigeria (Lagos Hub viewport)
   leafletMap = L.map('interactive-map', {
-    zoomControl: false // Using custom Google Maps-style zoom group
-  }).setView([6.5244, 3.3792], 12);
+    zoomControl: false, // Using custom Google Maps-style zoom group
+    minZoom: 5,
+    maxBounds: [[2, 0], [16, 17]],
+    worldCopyJump: false
+  }).fitBounds(NIGERIA_BOUNDS);
   // OpenStreetMap and Esri tiles require visible attribution
   leafletMap.attributionControl.setPrefix(false);
 
@@ -1026,7 +1047,7 @@ function initInteractiveMap() {
   // Floating Layer Switcher Popup
   const layerBtn = document.querySelector('#btn-map-layers');
   const layerMenu = document.querySelector('#gmap-layer-menu');
-  const layerOpts = document.querySelectorAll('.gmap-layer-opt');
+  const layerOpts = document.querySelectorAll('.gmap-layer-opt[data-layer]');
 
   if (layerBtn && layerMenu) {
     layerBtn.addEventListener('click', (e) => {
@@ -1045,23 +1066,44 @@ function initInteractiveMap() {
           if (!leafletMap.hasLayer(streetTileLayer)) streetTileLayer.addTo(leafletMap);
           mapEl.classList.add('layer-dark');
           currentTileLayerType = 'dark';
-          showToast('🌙 Dark Mode Map Style Active');
+          showToast('Dark map style', 'info');
         } else if (selected === 'streets') {
           if (leafletMap.hasLayer(satelliteTileLayer)) leafletMap.removeLayer(satelliteTileLayer);
           if (!leafletMap.hasLayer(streetTileLayer)) streetTileLayer.addTo(leafletMap);
           mapEl.classList.remove('layer-dark');
           currentTileLayerType = 'streets';
-          showToast('🗺️ Standard Streets Map Active');
+          showToast('Street map style', 'info');
         } else if (selected === 'satellite') {
           if (leafletMap.hasLayer(streetTileLayer)) leafletMap.removeLayer(streetTileLayer);
           if (!leafletMap.hasLayer(satelliteTileLayer)) satelliteTileLayer.addTo(leafletMap);
           mapEl.classList.remove('layer-dark');
           currentTileLayerType = 'satellite';
-          showToast('🛰️ Satellite Earth Imagery Active');
+          showToast('Satellite imagery', 'info');
         }
 
         layerMenu.classList.remove('open');
       });
+    });
+  }
+
+  // University layer toggle (lives in the layer menu)
+  const campusToggle = document.querySelector('#btn-toggle-campuses');
+  if (campusToggle) {
+    campusToggle.addEventListener('click', () => {
+      campusesVisible = !campusesVisible;
+      campusToggle.classList.toggle('active', campusesVisible);
+      campusToggle.setAttribute('aria-pressed', String(campusesVisible));
+      if (campusesVisible) campusLayer.addTo(leafletMap);
+      else leafletMap.removeLayer(campusLayer);
+    });
+  }
+
+  // Jump to a state
+  const stateJump = document.querySelector('#map-state-jump');
+  if (stateJump) {
+    stateJump.addEventListener('change', () => {
+      const st = NIGERIAN_STATES.find(x => x.value === stateJump.value);
+      if (st) flyToState(st);
     });
   }
 
@@ -1082,6 +1124,25 @@ function initInteractiveMap() {
     }
 
     const matches = [];
+
+    NIGERIAN_CAMPUSES.forEach(c => {
+      if ([c.short, c.name, c.town, c.state].some(v => v.toLowerCase().includes(q))) {
+        matches.push({
+          type: 'campus',
+          title: `${c.short} · ${c.name}`,
+          subtitle: `${CAMPUS_TYPE_LABELS[c.type]} · ${c.town}, ${c.state}`,
+          lat: c.lat,
+          lng: c.lng,
+          campus: c
+        });
+      }
+    });
+
+    NIGERIAN_STATES.forEach(st => {
+      if (st.value.toLowerCase().startsWith(q) || st.city.toLowerCase().startsWith(q)) {
+        matches.push({ type: 'state', title: `${st.label} State`, subtitle: `Centred on ${st.city}`, lat: st.lat, lng: st.lng, state: st });
+      }
+    });
 
     // Search geographic directory
     for (const [key, geo] of Object.entries(NIGERIAN_GEO_DIRECTORY)) {
@@ -1116,35 +1177,37 @@ function initInteractiveMap() {
 
     if (matches.length === 0) {
       autocompleteList.innerHTML = `
-        <li class="gmap-autocomplete-item" style="color:var(--text-muted); cursor:default;">
-          <span>🔍 No matching locations or listings found</span>
+        <li class="gmap-autocomplete-item is-empty">
+          ${icon('search')}<span>No matching places or listings</span>
         </li>
       `;
       autocompleteList.classList.add('open');
       return;
     }
 
-    matches.slice(0, 6).forEach(item => {
+    const AUTOCOMPLETE_ICONS = { campus: 'cap', state: 'map', listing: 'home', location: 'pin' };
+    matches.slice(0, 7).forEach(item => {
       const li = document.createElement('li');
       li.className = 'gmap-autocomplete-item';
-      const icon = item.type === 'listing' ? '🏠' : '📍';
       li.innerHTML = `
-        <span>${icon}</span>
-        <div style="flex: 1; overflow: hidden;">
-          <div class="gmap-autocomplete-title" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.title)}</div>
-          <div class="gmap-autocomplete-sub" style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(item.subtitle)}</div>
+        <span class="gmap-autocomplete-icon ${item.campus ? `campus-${item.campus.type}` : ''}">${icon(AUTOCOMPLETE_ICONS[item.type])}</span>
+        <div class="gmap-autocomplete-text">
+          <div class="gmap-autocomplete-title">${escapeHtml(item.title)}</div>
+          <div class="gmap-autocomplete-sub">${escapeHtml(item.subtitle)}</div>
         </div>
       `;
 
       li.addEventListener('click', () => {
-        if (searchInput) searchInput.value = item.title;
+        if (searchInput) searchInput.value = item.campus ? item.campus.short : item.title;
         autocompleteList.classList.remove('open');
-        leafletMap.flyTo([item.lat, item.lng], 14, { duration: 1.2 });
 
-        if (item.listing) {
-          openGmapPropertyDrawer(item.listing);
+        if (item.state) {
+          flyToState(item.state);
+        } else if (item.campus) {
+          focusCampus(item.campus);
         } else {
-          showToast(`📍 Centered on ${item.title}`);
+          leafletMap.flyTo([item.lat, item.lng], 14, { duration: 1.2 });
+          if (item.listing) openGmapPropertyDrawer(item.listing);
         }
       });
 
@@ -1204,7 +1267,7 @@ function initInteractiveMap() {
       if (chip.id === 'btn-chip-nearby') {
         // "Nearby (< 5km)" filter chip
         if (!currentUserGps) {
-          showToast('Detecting your GPS location to calculate nearby properties... 📍');
+          showToast('Finding your location to show nearby properties…', 'info');
           acquireUserGpsLocation(true).then(() => {
             const nearby = currentListings.filter(l => l.distanceKm !== undefined && l.distanceKm <= 5);
             refreshMapMarkers(nearby);
@@ -1224,7 +1287,7 @@ function initInteractiveMap() {
   // "Search This Area" Floating Button (Google Maps Pattern)
   const searchAreaBtn = document.querySelector('#btn-search-this-area');
   if (searchAreaBtn) {
-    leafletMap.on('moveend', () => {
+    leafletMap.on('dragend', () => {
       searchAreaBtn.style.display = 'inline-flex';
     });
 
@@ -1237,7 +1300,7 @@ function initInteractiveMap() {
       });
 
       refreshMapMarkers(inView);
-      showToast(`📍 Found ${inView.length} properties in current map view`);
+      showToast(`${inView.length} properties in this map area`, 'info');
       searchAreaBtn.style.display = 'none';
     });
   }
@@ -1259,7 +1322,7 @@ function initInteractiveMap() {
       const isFull = mapWrap.classList.contains('map-fullscreen-active');
       fullscreenBtn.classList.toggle('active', isFull);
       setTimeout(() => leafletMap.invalidateSize(), 250);
-      showToast(isFull ? '⛶ Fullscreen Map Activated (Press Esc or Click again to exit)' : 'Exited Fullscreen Map');
+      if (isFull) showToast('Full-screen map. Press Esc to exit.', 'info');
     });
 
     document.addEventListener('keydown', (e) => {
@@ -1275,8 +1338,7 @@ function initInteractiveMap() {
   const recenterBtn = document.querySelector('#btn-recenter-map');
   if (recenterBtn) {
     recenterBtn.addEventListener('click', () => {
-      leafletMap.flyTo([6.5244, 3.3792], 12, { duration: 1.2 });
-      showToast('🎯 Map Centered on Lagos / Nigeria');
+      leafletMap.flyToBounds(NIGERIA_BOUNDS, { duration: 1.2 });
     });
   }
 
@@ -1300,9 +1362,117 @@ function initInteractiveMap() {
     if (autocompleteList) autocompleteList.classList.remove('open');
   });
 
-  // Initial marker load
+  // Regroup pins and adjust campus labels as the zoom changes
+  leafletMap.on('zoomend', () => {
+    mapEl.classList.toggle('map-far', leafletMap.getZoom() < 8);
+    drawListingMarkers();
+  });
+  mapEl.classList.toggle('map-far', leafletMap.getZoom() < 8);
+
+  renderCampusLayer();
   refreshMapMarkers(currentListings);
 }
+
+/* ==========================================================================
+   Universities layer: highlighted campuses with a shaded zone around each
+   ========================================================================== */
+function isNearCampus(listing, campus) {
+  if (listing.campus && listing.campus !== 'none') {
+    const tag = listing.campus.toLowerCase();
+    if (tag === campus.label.toLowerCase() || tag.split(/[\s(&]/)[0] === campus.short.toLowerCase()) return true;
+  }
+  return !!(listing.lat && listing.lng) &&
+    calculateHaversineDistanceKm(campus.lat, campus.lng, listing.lat, listing.lng) <= CAMPUS_RADIUS_KM;
+}
+
+function renderCampusLayer() {
+  campusLayer = L.layerGroup();
+  NIGERIAN_CAMPUSES.forEach(campus => {
+    const colour = CAMPUS_COLOURS[campus.type];
+    L.circle([campus.lat, campus.lng], {
+      radius: CAMPUS_ZONE_METRES,
+      color: colour,
+      weight: 1,
+      opacity: 0.7,
+      dashArray: '4 4',
+      fillColor: colour,
+      fillOpacity: 0.08,
+      interactive: false
+    }).addTo(campusLayer);
+
+    const marker = L.marker([campus.lat, campus.lng], {
+      icon: L.divIcon({
+        className: 'campus-marker-anchor',
+        html: `<div class="campus-marker ${campus.type}" title="${escapeHtml(campus.name)}">${icon('cap')}<span>${escapeHtml(campus.short)}</span></div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
+      }),
+      keyboard: true,
+      title: campus.name,
+      zIndexOffset: -500 // listings stay on top of campus markers
+    });
+    marker.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      focusCampus(campus);
+    });
+    marker.addTo(campusLayer);
+  });
+  if (campusesVisible) campusLayer.addTo(leafletMap);
+}
+
+function flyToState(st) {
+  leafletMap.flyTo([st.lat, st.lng], st.zoom, { duration: 1.2 });
+  const stateJump = document.querySelector('#map-state-jump');
+  if (stateJump) stateJump.value = st.value;
+}
+
+function focusCampus(campus) {
+  if (!leafletMap) return;
+  leafletMap.flyTo([campus.lat, campus.lng], 14, { duration: 1.1 });
+  openCampusDrawer(campus);
+}
+
+function openCampusDrawer(campus) {
+  const drawer = document.querySelector('#gmap-property-preview-drawer');
+  const content = document.querySelector('#gmap-drawer-content');
+  if (!drawer || !content) return;
+
+  const nearby = currentListings.filter(l => isNearCampus(l, campus)).sort((a, b) => a.price - b.price);
+  const state = NIGERIAN_STATES.find(st => st.value === campus.state);
+  activeListingId = null;
+  document.querySelectorAll('.gmap-price-marker').forEach(m => m.classList.remove('active'));
+
+  content.innerHTML = `
+    <div class="campus-drawer-head ${campus.type}">
+      <span class="campus-type-pill ${campus.type}">${icon('cap')}${CAMPUS_TYPE_LABELS[campus.type]}</span>
+      <h4 class="gmap-drawer-title">${escapeHtml(campus.name)} <span class="campus-short">${escapeHtml(campus.short)}</span></h4>
+      <div class="gmap-drawer-address">${icon('pin')}<span>${escapeHtml(campus.town)}, ${escapeHtml(state ? state.label : campus.state)} State</span></div>
+    </div>
+    <div class="campus-stats">
+      <div><strong>${nearby.length}</strong><span>${nearby.length === 1 ? 'home' : 'homes'} within ${CAMPUS_RADIUS_KM} km</span></div>
+      <div><strong>${nearby.length ? escapeHtml(formatPricePill(nearby[0].price)) : '—'}</strong><span>lowest yearly rent</span></div>
+    </div>
+    <div class="gmap-drawer-actions">
+      <button type="button" class="gmap-drawer-btn primary" data-campus-action="nearby">${icon('home')}Homes nearby</button>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${campus.lat},${campus.lng}" target="_blank" rel="noopener noreferrer" class="gmap-drawer-btn">${icon('navigation')}Directions</a>
+    </div>
+  `;
+
+  content.querySelector('[data-campus-action="nearby"]').addEventListener('click', () => showHomesNearCampus(campus));
+  drawer.style.display = 'block';
+}
+
+function showHomesNearCampus(campus) {
+  const campusSelect = document.querySelector('#listings-campus-filter');
+  if (campusSelect) campusSelect.value = campus.id;
+  currentCampusFilter = campus.id;
+  currentActiveMarker = null;
+  renderListingsGrid(currentCategoryFilter, currentSearchQuery, currentStateFilter, currentCampusFilter, currentBudgetFilter);
+  const count = document.querySelectorAll('#properties-grid .property-card').length;
+  showToast(count ? `${count} ${count === 1 ? 'home' : 'homes'} near ${campus.short}` : `No listings near ${campus.short} yet`, count ? 'success' : 'info');
+  if (!count) leafletMap.flyTo([campus.lat, campus.lng], 13, { duration: 0.8 });
+}
+
 
 /* ==========================================================================
    Find My Location (GPS Geolocation & Distance Matrix)
@@ -1331,7 +1501,7 @@ function acquireUserGpsLocation(flyToUser = true) {
       });
 
       userGpsMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(leafletMap);
-      userGpsMarker.bindPopup('<b>📍 Your Current Location</b><br><span style="font-size:0.75rem; color:#888;">Distances calculated from here</span>');
+      userGpsMarker.bindPopup('<b>Your location</b><br><span class="popup-sub">Distances are measured from here</span>');
 
       if (flyToUser && leafletMap) {
         leafletMap.flyTo([lat, lng], 14, { duration: 1.2 });
@@ -1351,8 +1521,8 @@ function acquireUserGpsLocation(flyToUser = true) {
       if (statusPill) statusPill.style.display = 'flex';
       if (statusText) {
         statusText.textContent = isSimulated
-          ? '📍 Central Hub Active (UNILAG/Yaba Corridor)'
-          : '📍 GPS Location Active • Showing Nearest First';
+          ? 'Approximate location (Yaba / UNILAG)'
+          : 'Your location · nearest first';
       }
 
       if (gpsBtn) {
@@ -1365,8 +1535,8 @@ function acquireUserGpsLocation(flyToUser = true) {
       refreshMapMarkers(currentListings);
 
       showToast(isSimulated 
-        ? '📍 Location active (UNILAG / Yaba Corridor). Properties sorted by distance!' 
-        : '📍 GPS Connected! Closest properties sorted to top 🚗'
+        ? 'Location unavailable, so distances are from Yaba / UNILAG.'
+        : 'Sorted by distance from you.'
       );
 
       resolve(currentUserGps);
@@ -1393,81 +1563,108 @@ function acquireUserGpsLocation(flyToUser = true) {
 /* ==========================================================================
    Map Markers Engine (Google Maps Price Pills & Drawer Preview)
    ========================================================================== */
-function refreshMapMarkers(listingsToDisplay = currentListings) {
+function refreshMapMarkers(listingsToDisplay = currentListings, { fit = true } = {}) {
   if (!leafletMap || typeof L === 'undefined') return;
-
-  // Clear existing property markers
-  mapMarkers.forEach(m => leafletMap.removeLayer(m));
-  mapMarkers = [];
+  markerSource = listingsToDisplay;
 
   const countBadge = document.querySelector('#map-pinned-count');
   if (countBadge) {
-    countBadge.textContent = `${listingsToDisplay.length} Properties Pinned`;
+    countBadge.textContent = `${listingsToDisplay.length} ${listingsToDisplay.length === 1 ? 'property' : 'properties'} on the map`;
   }
 
-  if (listingsToDisplay.length === 0) return;
+  drawListingMarkers();
 
-  const bounds = [];
-  if (currentUserGps) {
-    bounds.push([currentUserGps.lat, currentUserGps.lng]);
+  if (fit && listingsToDisplay.length > 0 && !currentActiveMarker) {
+    const bounds = listingsToDisplay.map(item => [item.lat || 6.4474, item.lng || 3.4723]);
+    if (currentUserGps) bounds.push([currentUserGps.lat, currentUserGps.lng]);
+    leafletMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
   }
+}
 
-  listingsToDisplay.forEach(item => {
-    const lat = item.lat || 6.4474;
-    const lng = item.lng || 3.4723;
-    bounds.push([lat, lng]);
+// Pins closer than one grid cell on screen share a bubble; zoom in to split them
+const CLUSTER_CELL_PX = { x: 74, y: 44 };
 
-    const isStudent = item.type === 'student' || (item.campus && item.campus !== 'none');
-    const isBudget = (item.price || 0) <= 300000;
-    const isStore = item.type === 'store';
+function drawListingMarkers() {
+  if (!leafletMap) return;
+  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  mapMarkers = [];
 
-    let icon = '🏠';
-    let markerClass = '';
-
-    if (isStudent) {
-      icon = '🎓';
-      markerClass = 'student';
-    } else if (isBudget) {
-      icon = '💰';
-      markerClass = 'budget';
-    } else if (isStore) {
-      icon = '🏪';
-      markerClass = 'store';
-    }
-
-    const priceText = formatPricePill(item.price);
-
-    // Google Maps-Style Real Estate Price Tag HTML
-    const markerHtml = `
-      <div class="gmap-price-marker ${markerClass}" data-listing-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)}">
-        <span>${icon}</span>
-        <span>${priceText}</span>
-      </div>
-    `;
-
-    const priceIcon = L.divIcon({
-      html: markerHtml,
-      className: '',
-      iconSize: [80, 32],
-      iconAnchor: [40, 36],
-      popupAnchor: [0, -36]
-    });
-
-    const marker = L.marker([lat, lng], { icon: priceIcon }).addTo(leafletMap);
-
-    // Marker Click Handler: Open Preview Drawer
-    marker.on('click', (e) => {
-      L.DomEvent.stopPropagation(e);
-      selectMapMarker(item, marker);
-    });
-
-    mapMarkers.push(marker);
+  const zoom = leafletMap.getZoom();
+  const cells = new Map();
+  markerSource.forEach(item => {
+    const pt = leafletMap.project([item.lat || 6.4474, item.lng || 3.4723], zoom);
+    const key = zoom >= 15 ? item.id : `${Math.floor(pt.x / CLUSTER_CELL_PX.x)}:${Math.floor(pt.y / CLUSTER_CELL_PX.y)}`;
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(item);
   });
 
-  // Fit bounds if user has not manually locked location
-  if (bounds.length > 0 && !currentActiveMarker) {
-    leafletMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+  cells.forEach(group => {
+    if (group.length === 1) addPriceMarker(group[0]);
+    else addClusterMarker(group);
+  });
+}
+
+function addPriceMarker(item) {
+  const isStudent = item.type === 'student' || (item.campus && item.campus !== 'none');
+  const isBudget = (item.price || 0) <= 300000;
+  const isStore = item.type === 'store';
+
+  let markerIcon = 'home';
+  let markerClass = '';
+  if (isStudent) {
+    markerIcon = 'cap';
+    markerClass = 'student';
+  } else if (isBudget) {
+    markerIcon = 'tag';
+    markerClass = 'budget';
+  } else if (isStore) {
+    markerIcon = 'store';
+    markerClass = 'store';
   }
+
+  const markerHtml = `
+    <div class="gmap-price-marker ${markerClass}${item.id === activeListingId ? ' active' : ''}" data-listing-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)}">
+      ${icon(markerIcon)}
+      <span>${formatPricePill(item.price)}</span>
+    </div>
+  `;
+
+  const marker = L.marker([item.lat || 6.4474, item.lng || 3.4723], {
+    icon: L.divIcon({ html: markerHtml, className: '', iconSize: [80, 32], iconAnchor: [40, 36], popupAnchor: [0, -36] }),
+    title: item.title,
+    riseOnHover: true
+  }).addTo(leafletMap);
+
+  marker.on('click', (e) => {
+    L.DomEvent.stopPropagation(e);
+    selectMapMarker(item, marker);
+  });
+  mapMarkers.push(marker);
+}
+
+function addClusterMarker(group) {
+  const lat = group.reduce((sum, i) => sum + (i.lat || 6.4474), 0) / group.length;
+  const lng = group.reduce((sum, i) => sum + (i.lng || 3.4723), 0) / group.length;
+  const minPrice = Math.min(...group.map(i => i.price || 0));
+
+  const marker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: 'campus-marker-anchor',
+      html: `<div class="map-cluster"><strong>${group.length}</strong><span>from ${formatPricePill(minPrice)}</span></div>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
+    }),
+    title: `${group.length} properties, zoom in to see them`,
+    zIndexOffset: 200
+  }).addTo(leafletMap);
+
+  marker.on('click', (e) => {
+    L.DomEvent.stopPropagation(e);
+    const bounds = L.latLngBounds(group.map(i => [i.lat || 6.4474, i.lng || 3.4723]));
+    const target = Math.min(leafletMap.getBoundsZoom(bounds, false, L.point(80, 80)), 16);
+    leafletMap.flyTo(bounds.getCenter(), Math.max(target, leafletMap.getZoom() + 2), { duration: 0.8 });
+  });
+  mapMarkers.push(marker);
 }
 
 function selectMapMarker(item, marker) {
@@ -1476,6 +1673,7 @@ function selectMapMarker(item, marker) {
   const el = document.querySelector(`.gmap-price-marker[data-listing-id="${CSS.escape(item.id)}"]`);
   if (el) el.classList.add('active');
 
+  activeListingId = item.id;
   currentActiveMarker = marker;
 
   // Center smoothly on pin
@@ -1494,7 +1692,7 @@ function openGmapPropertyDrawer(item) {
 
   const lat = item.lat || 6.4474;
   const lng = item.lng || 3.4723;
-  const thumbUrl = safeMediaUrl(item.media && item.media[0] && item.media[0].type !== 'video' ? item.media[0].url : '', 'assets/images/hero_student_hostel.jpg');
+  const thumbUrl = safeMediaUrl(item.media && item.media[0] && item.media[0].type !== 'video' ? cardImage(item.media[0].url) : '', 'assets/images/hero_student_hostel-sm.webp');
   const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
   const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello DOMA Agent, I am interested in your property: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}.`)}`;
   const gmapsDeepLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -1502,18 +1700,18 @@ function openGmapPropertyDrawer(item) {
   let distHtml = '';
   if (item.distanceKm !== undefined) {
     const distText = item.distanceKm < 1 ? `${Math.round(item.distanceKm * 1000)}m away` : `${item.distanceKm.toFixed(1)} km away`;
-    distHtml = `<div class="gmap-drawer-dist-pill">🚗 ${distText} from you</div>`;
+    distHtml = `<div class="gmap-drawer-dist-pill">${icon('navigation')}${distText}</div>`;
   }
 
   let campusHtml = '';
   if (item.campus && item.campus !== 'none') {
-    campusHtml = `<div class="gmap-drawer-campus-pill">🎓 ${escapeHtml(item.campusDist || item.campus)}</div>`;
+    campusHtml = `<div class="gmap-drawer-campus-pill">${icon('cap')}${escapeHtml(item.campusDist || item.campus)}</div>`;
   }
 
   content.innerHTML = `
     <div class="gmap-drawer-media">
       <img src="${escapeHtml(thumbUrl)}" class="gmap-drawer-img" alt="${escapeHtml(item.title)}">
-      <div class="gmap-drawer-badge">${escapeHtml(item.type === 'student' ? 'Student Hostel' : item.type === 'store' ? 'Commercial Store' : 'House for Rent')}</div>
+      <div class="gmap-drawer-badge">${typeBadgeHtml(item.type)}</div>
     </div>
     <div>
       <div class="gmap-drawer-price">
@@ -1526,20 +1724,20 @@ function openGmapPropertyDrawer(item) {
       ${campusHtml}
     </div>
     <div class="gmap-drawer-address">
-      📍 ${escapeHtml(item.address ? item.address + ', ' : '')}${escapeHtml(item.area)}, ${escapeHtml(item.state)}
+      ${icon('pin')}<span>${escapeHtml(item.address ? item.address + ', ' : '')}${escapeHtml(item.area)}, ${escapeHtml(item.state)}</span>
     </div>
     <div class="gmap-drawer-actions">
       <button type="button" class="gmap-drawer-btn primary" data-drawer-action="directions">
-        🚗 Directions
+        ${icon('navigation')}Directions
       </button>
       <a href="${gmapsDeepLink}" target="_blank" rel="noopener noreferrer" class="gmap-drawer-btn google-app">
-        🗺️ Google Maps
+        ${icon('external')}Google Maps
       </a>
       <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="gmap-drawer-btn whatsapp">
-        💬 WhatsApp
+        ${icon('message')}WhatsApp
       </a>
       <button type="button" class="gmap-drawer-btn inspect" data-drawer-action="inspect">
-        📅 Inspect
+        ${icon('calendar')}Inspect
       </button>
     </div>
   `;
@@ -1555,6 +1753,7 @@ function closeGmapPropertyDrawer() {
   const drawer = document.querySelector('#gmap-property-preview-drawer');
   if (drawer) drawer.style.display = 'none';
   document.querySelectorAll('.gmap-price-marker').forEach(m => m.classList.remove('active'));
+  activeListingId = null;
   currentActiveMarker = null;
 }
 
@@ -1573,14 +1772,36 @@ function openScheduleModal(item) {
 
 function focusMapOnLocation(searchTerm) {
   if (!leafletMap || !searchTerm) return;
-  const lower = searchTerm.toLowerCase();
+  const lower = searchTerm.toLowerCase().trim();
 
-  for (const [key, geo] of Object.entries(NIGERIAN_GEO_DIRECTORY)) {
-    if (lower.includes(key) || key.includes(lower)) {
-      leafletMap.flyTo([geo.lat, geo.lng], 13, { duration: 1.2 });
-      showToast(`📍 Map focused on ${geo.landmark}`);
-      return;
-    }
+  // Most specific first: a campus code ("UNIBEN"), a state, a known place, then campus names
+  const campusByCode = findCampus(lower) || NIGERIAN_CAMPUSES.find(c =>
+    c.short.toLowerCase() === lower || placeMatches(lower, c.short.toLowerCase()));
+  if (campusByCode) {
+    focusCampus(campusByCode);
+    return;
+  }
+
+  const state = NIGERIAN_STATES.find(st => st.value.toLowerCase() === lower || st.city.toLowerCase() === lower);
+  if (state) {
+    flyToState(state);
+    return;
+  }
+
+  const placeKey = Object.keys(NIGERIAN_GEO_DIRECTORY)
+    .sort((a, b) => b.length - a.length)
+    .find(key => placeMatches(lower, key) || key.startsWith(lower));
+  if (placeKey) {
+    const geo = NIGERIAN_GEO_DIRECTORY[placeKey];
+    leafletMap.flyTo([geo.lat, geo.lng], 13, { duration: 1.2 });
+    showToast(`Showing ${geo.landmark}`, 'info');
+    return;
+  }
+
+  const campusByName = NIGERIAN_CAMPUSES.find(c => c.name.toLowerCase().includes(lower));
+  if (campusByName) {
+    focusCampus(campusByName);
+    return;
   }
 
   // If search matches any listing title/area
@@ -1601,7 +1822,11 @@ function focusMapOnLocation(searchTerm) {
    ========================================================================== */
 function openDirectionsForListing(item) {
   const modal = document.querySelector('#directions-modal');
-  if (!modal) return;
+  if (!modal) {
+    // Pages without the map: hand straight over to Google Maps
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${item.lat || 6.4474},${item.lng || 3.4723}`, '_blank', 'noopener');
+    return;
+  }
 
   const destName = document.querySelector('#directions-dest-name');
   const startSelect = document.querySelector('#directions-start-select');
@@ -1658,13 +1883,11 @@ function calculateAndDrawRoute(startKey, item) {
   if (distEl) distEl.textContent = `${directDist.toFixed(1)} km`;
   if (trafficEl) {
     if (driveMinutes > 40) {
-      trafficEl.textContent = '🟡 Moderate Traffic';
-      trafficEl.style.color = 'var(--yellow-500)';
-      trafficEl.style.borderColor = 'var(--yellow-500)';
+      trafficEl.textContent = 'Long drive';
+      trafficEl.className = 'traffic-badge amber';
     } else {
-      trafficEl.textContent = '🟢 Light Traffic';
-      trafficEl.style.color = '#22c55e';
-      trafficEl.style.borderColor = '#22c55e';
+      trafficEl.textContent = 'Short drive';
+      trafficEl.className = 'traffic-badge green';
     }
   }
 
@@ -1906,12 +2129,13 @@ function updateAgentPortalView() {
   if (alertBanner) {
     alertBanner.hidden = false;
     alertBanner.className = `kyc-alert ${status}`;
+    const alertIcon = icon(isVerified ? 'check-circle' : isRejected ? 'alert' : 'clock');
     if (isVerified) {
-      alertBanner.innerHTML = '<strong>KYC verified.</strong> Your CAC and NIN have been approved. You can publish student hostels, houses and stores.';
+      alertBanner.innerHTML = `${alertIcon}<div><strong>KYC verified.</strong> Your CAC and NIN have been approved. You can publish student hostels, houses and stores.</div>`;
     } else if (isRejected) {
-      alertBanner.innerHTML = `<strong>KYC not approved:</strong> ${escapeHtml(currentAgent.rejectionReason || 'Your documents could not be verified.')} Update your details and resubmit.`;
+      alertBanner.innerHTML = `${alertIcon}<div><strong>KYC not approved:</strong> ${escapeHtml(currentAgent.rejectionReason || 'Your documents could not be verified.')} Update your details and resubmit.</div>`;
     } else {
-      alertBanner.innerHTML = '<strong>Review in progress.</strong> Our compliance team is checking your CAC and NIN. You can publish listings once you are approved.';
+      alertBanner.innerHTML = `${alertIcon}<div><strong>Review in progress.</strong> Our compliance team is checking your CAC and NIN. You can publish listings once you are approved.</div>`;
     }
   }
 
@@ -1964,7 +2188,7 @@ function renderAgentMyListings() {
     container.innerHTML = `
       <div class="empty-inline">
         <p>You haven't uploaded any listings yet.</p>
-        ${currentAgent.kycStatus === 'verified' ? '<button type="button" class="btn-primary" data-action="upload">+ Upload your first listing</button>' : ''}
+        ${currentAgent.kycStatus === 'verified' ? `<button type="button" class="btn-primary" data-action="upload">${icon('plus')}Upload your first listing</button>` : ''}
       </div>
     `;
     return;
@@ -1973,22 +2197,18 @@ function renderAgentMyListings() {
   container.innerHTML = `
     <div class="mini-listing-grid">
       ${myListings.map(l => {
-        const isStudent = l.type === 'student';
-        const isStore = l.type === 'store';
-        const badgeClass = isStudent ? 'student' : (isStore ? 'gold' : '');
-        const badgeText = isStudent ? '🎓 Student' : (isStore ? '🏪 Store' : '🏠 House');
         return `
           <div class="mini-listing-card">
             <div class="mini-listing-head">
-              <span class="card-badge ${badgeClass}">${badgeText}</span>
+              ${typeBadgeHtml(l.type, true)}
               <span class="mini-listing-price">${escapeHtml(l.priceFormatted)}</span>
             </div>
             <h4>${escapeHtml(l.title)}</h4>
-            ${l.campus && l.campus !== 'none' ? `<p class="mini-listing-campus">🎓 ${escapeHtml(l.campus)} ${l.campusDist ? `(${escapeHtml(l.campusDist)})` : ''}</p>` : ''}
-            <p class="mini-listing-loc">📍 ${escapeHtml(l.area)}, ${escapeHtml(l.state)}</p>
+            ${l.campus && l.campus !== 'none' ? `<p class="mini-listing-campus">${icon('cap')}${escapeHtml(l.campus)} ${l.campusDist ? `(${escapeHtml(l.campusDist)})` : ''}</p>` : ''}
+            <p class="mini-listing-loc">${icon('pin')}${escapeHtml(l.area)}, ${escapeHtml(l.state)}</p>
             <div class="mini-listing-actions">
-              <a href="listings.html?filter=my-listings">View on map →</a>
-              <button type="button" class="btn-text-danger" data-action="delete" data-listing-id="${escapeHtml(l.id)}">Delete</button>
+              <a href="listings.html?filter=my-listings">View on map ${icon('arrow-right')}</a>
+              <button type="button" class="btn-text-danger" data-action="delete" data-listing-id="${escapeHtml(l.id)}">${icon('trash')}Delete</button>
             </div>
           </div>
         `;
@@ -2223,28 +2443,44 @@ function initMediaUploader() {
   });
 }
 
+// Whole-word match, so "iba" does not match "Ibadan" and "vi" does not match "Ovie"
+function placeIndex(text, key) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp(`(^|[^a-z])${escaped}([^a-z]|$)`).exec(text);
+  return m ? m.index : -1;
+}
+
+function placeMatches(text, key) {
+  return placeIndex(text, key) >= 0;
+}
+
 function matchCoordinatesForArea(state, area) {
-  const combined = (area + ' ' + state).toLowerCase();
-  for (const [key, geo] of Object.entries(NIGERIAN_GEO_DIRECTORY)) {
-    if (combined.includes(key)) {
-      // Small jitter so pins in same area don't stack directly on top of each other
-      const jitterLat = (Math.random() - 0.5) * 0.008;
-      const jitterLng = (Math.random() - 0.5) * 0.008;
-      return { lat: geo.lat + jitterLat, lng: geo.lng + jitterLng };
-    }
+  const jitter = (spread) => (Math.random() - 0.5) * spread; // keeps pins in one area from stacking
+  const text = `${area || ''}`.toLowerCase();
+
+  // 1. A known place in the listing's own state. Areas are written "neighbourhood, city",
+  //    so the earliest match is the most specific; longer names break ties.
+  const key = Object.keys(NIGERIAN_GEO_DIRECTORY)
+    .filter(k => NIGERIAN_GEO_DIRECTORY[k].state === state)
+    .map(k => ({ k, at: placeIndex(text, k) }))
+    .filter(x => x.at >= 0)
+    .sort((a, b) => a.at - b.at || b.k.length - a.k.length)
+    .map(x => x.k)[0];
+  if (key) {
+    const geo = NIGERIAN_GEO_DIRECTORY[key];
+    return { lat: geo.lat + jitter(0.008), lng: geo.lng + jitter(0.008) };
   }
 
-  // Default fallbacks by State
-  if (state.toLowerCase().includes('abuja')) {
-    return { lat: 9.0765 + (Math.random() - 0.5) * 0.02, lng: 7.3986 + (Math.random() - 0.5) * 0.02 };
-  } else if (state.toLowerCase().includes('rivers')) {
-    return { lat: 4.8156 + (Math.random() - 0.5) * 0.02, lng: 7.0498 + (Math.random() - 0.5) * 0.02 };
-  } else if (state.toLowerCase().includes('oyo')) {
-    return { lat: 7.4345 + (Math.random() - 0.5) * 0.02, lng: 3.9065 + (Math.random() - 0.5) * 0.02 };
-  }
+  // 2. A campus or campus town in that state
+  const campus = NIGERIAN_CAMPUSES.find(c => c.state === state && (
+    placeMatches(text, c.short.toLowerCase()) ||
+    c.town.toLowerCase().split(/,\s*/).some(town => placeMatches(text, town))
+  ));
+  if (campus) return { lat: campus.lat + jitter(0.012), lng: campus.lng + jitter(0.012) };
 
-  // Default Lagos Center
-  return { lat: 6.4474 + (Math.random() - 0.5) * 0.03, lng: 3.4723 + (Math.random() - 0.5) * 0.03 };
+  // 3. The state's main city
+  const st = NIGERIAN_STATES.find(x => x.value === state) || NIGERIAN_STATES[0];
+  return { lat: st.lat + jitter(0.03), lng: st.lng + jitter(0.03) };
 }
 
 function openUploadModal() {
@@ -2285,7 +2521,8 @@ function initPaymentPage() {
     card.addEventListener('click', () => selectServiceCard(card));
   });
 
-  const presetCard = serviceParam && document.querySelector(`.service-package-card[data-service="${CSS.escape(serviceParam)}"]`);
+  const presetCard = (serviceParam && document.querySelector(`.service-package-card[data-service="${CSS.escape(serviceParam)}"]`))
+    || document.querySelector('.service-package-card.selected');
   if (presetCard) {
     selectServiceCard(presetCard);
   } else {
@@ -2369,53 +2606,109 @@ function initPaymentPage() {
 }
 
 /* ==========================================================================
-   Valuation & Budgeting Calculator Logic
+   Rent Check & Move-in Cost Calculator
+   Estimates come from live listings only; nothing here is invented.
    ========================================================================== */
+const formatNaira = (n) => `₦${Math.round(n).toLocaleString()}`;
+
+function percentile(sorted, p) {
+  if (!sorted.length) return 0;
+  const idx = (sorted.length - 1) * p;
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+const VALUATION_TYPE_LABELS = { any: 'rental', house: 'house', student: 'student hostel', store: 'store' };
+
 function initValuationPage() {
-  const calcBtn = document.querySelector('#btn-calculate-valuation');
+  const form = document.querySelector('#valuation-form');
   const amountDisp = document.querySelector('#valuation-result-amount');
   const rangeDisp = document.querySelector('#valuation-result-range');
+  const countDisp = document.querySelector('#valuation-result-count');
+  const compsEl = document.querySelector('#valuation-comps');
 
-  if (calcBtn && amountDisp) {
-    calcBtn.addEventListener('click', () => {
-      calcBtn.textContent = 'Analyzing Comps...';
-      setTimeout(() => {
-        const type = document.querySelector('#val-type')?.value || 'residential';
-        const base = type === 'store' ? 3800000 : 4500000;
-        const low = Math.round(base * 0.93 / 100000) * 100000;
-        const high = Math.round(base * 1.07 / 100000) * 100000;
+  function runRentCheck() {
+    const areaRaw = (document.querySelector('#val-area')?.value || '').trim();
+    const area = areaRaw.toLowerCase();
+    const type = document.querySelector('#val-type')?.value || 'any';
 
-        amountDisp.textContent = `₦${base.toLocaleString()}/yr`;
-        if (rangeDisp) {
-          rangeDisp.textContent = `Estimated Range: ₦${low.toLocaleString()} – ₦${high.toLocaleString()}`;
-        }
-        calcBtn.textContent = 'Recalculate Valuation';
-        showToast('Valuation estimated in Naira ✨');
-      }, 500);
+    // Only yearly prices are comparable with each other
+    let comps = currentListings.filter(l =>
+      (type === 'any' || l.type === type) && (l.period || '/year').includes('year') && l.price > 0
+    );
+    if (area) {
+      comps = comps.filter(l => [l.area, l.address, l.state, l.campus, l.title]
+        .some(v => v && v.toLowerCase().includes(area)));
+    }
+    comps.sort((a, b) => a.price - b.price);
+    const prices = comps.map(l => l.price);
+    const label = VALUATION_TYPE_LABELS[type] || 'rental';
+
+    if (!prices.length) {
+      amountDisp.textContent = '—';
+      rangeDisp.textContent = `No ${label} listings found${areaRaw ? ` for “${areaRaw}”` : ''} yet. Try a nearby area or “Any type”.`;
+      countDisp.textContent = '0 comparable listings';
+      compsEl.replaceChildren();
+      return;
+    }
+
+    amountDisp.textContent = `${formatNaira(percentile(prices, 0.5))}/yr`;
+    rangeDisp.textContent = prices.length >= 4
+      ? `Typical range ${formatNaira(percentile(prices, 0.25))} – ${formatNaira(percentile(prices, 0.75))}`
+      : `Range ${formatNaira(prices[0])} – ${formatNaira(prices[prices.length - 1])}`;
+    countDisp.textContent = `Median of ${prices.length} listing${prices.length === 1 ? '' : 's'} on DOMA${listingsAreSamples ? ' (sample data: live database unreachable)' : ''}`;
+
+    compsEl.innerHTML = comps.slice(0, 4).map(l => `
+      <a class="comp-row" href="listings.html?q=${encodeURIComponent(l.area || '')}">
+        <span class="comp-title">${escapeHtml(l.title)}<small>${escapeHtml(l.area)}, ${escapeHtml(l.state)}</small></span>
+        <strong>${escapeHtml(l.priceFormatted)}</strong>
+      </a>
+    `).join('');
+  }
+
+  if (form && amountDisp) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      runRentCheck();
     });
+    runRentCheck();
   }
 
-  const priceSlider = document.querySelector('#mortgage-price');
-  const depositSlider = document.querySelector('#mortgage-deposit');
-  const monthlyDisp = document.querySelector('#mortgage-monthly-amount');
-  const priceVal = document.querySelector('#val-mortgage-price');
-  const depositVal = document.querySelector('#val-mortgage-deposit');
+  // Move-in cost: rent + caution + agency + legal + service charge
+  const rentInput = document.querySelector('#mortgage-price');
+  const fields = ['#mortgage-price', '#mortgage-deposit', '#val-agency-fee', '#val-legal-fee', '#val-service-charge']
+    .map(sel => document.querySelector(sel));
 
-  function updateBudget() {
-    if (!priceSlider) return;
-    const price = parseFloat(priceSlider.value);
-    const depositPct = parseFloat(depositSlider ? depositSlider.value : 10);
-    const depositAmt = price * (depositPct / 100);
-
-    if (priceVal) priceVal.textContent = `₦${price.toLocaleString()}`;
-    if (depositVal) depositVal.textContent = `${depositPct}% (₦${Math.round(depositAmt).toLocaleString()})`;
-    if (monthlyDisp) monthlyDisp.textContent = `₦${Math.round(price / 12).toLocaleString()}`;
+  function setText(sel, text) {
+    const el = document.querySelector(sel);
+    if (el) el.textContent = text;
   }
 
-  [priceSlider, depositSlider].forEach(s => {
-    if (s) s.addEventListener('input', updateBudget);
-  });
-  updateBudget();
+  function updateMoveInCost() {
+    if (!rentInput) return;
+    const [rent, cautionPct, agencyPct, legalPct, service] = fields.map(el => parseFloat(el ? el.value : 0) || 0);
+    const caution = rent * cautionPct / 100;
+    const agency = rent * agencyPct / 100;
+    const legal = rent * legalPct / 100;
+    const total = rent + caution + agency + legal + service;
+
+    setText('#val-mortgage-price', formatNaira(rent));
+    setText('#val-mortgage-deposit', `${cautionPct}%`);
+    setText('#val-agency-fee-out', `${agencyPct}%`);
+    setText('#val-legal-fee-out', `${legalPct}%`);
+    setText('#val-service-charge-out', formatNaira(service));
+    setText('#bd-rent', formatNaira(rent));
+    setText('#bd-caution', formatNaira(caution));
+    setText('#bd-agency', formatNaira(agency));
+    setText('#bd-legal', formatNaira(legal));
+    setText('#bd-service', formatNaira(service));
+    setText('#val-total-upfront', formatNaira(total));
+    setText('#mortgage-monthly-amount', formatNaira(total / 12));
+  }
+
+  fields.forEach(el => el && el.addEventListener('input', updateMoveInCost));
+  updateMoveInCost();
 }
 
 /* ==========================================================================

@@ -18,276 +18,275 @@
   <header class="site-header" id="main-header">
     <div class="container nav-container">
       <a href="index.html" class="brand-logo" aria-label="DOMA home">
-        <span class="brand-symbol" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </span>
+        <span class="brand-symbol" aria-hidden="true"><svg class="icon"><use href="icons.svg#i-home"></use></svg></span>
         <span class="brand-name">DOMA<span>.ng</span></span>
       </a>
 
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <ul class="nav-links">
           <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="listings.html" class="nav-link">Houses &amp; Stores</a></li>
-          <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
+          <li><a href="listings.html" class="nav-link">Browse homes</a></li>
+          <li><a href="agent-portal.html" class="nav-link">For agents</a></li>
+          <li><a href="valuation.html" class="nav-link">Rent check</a></li>
           <li><a href="payment.html" class="nav-link">Payments</a></li>
-          <li><a href="valuation.html" class="nav-link">Valuation</a></li>
-          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My Dashboard</a></li>
+          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My dashboard</a></li>
           <li id="nav-admin-item" hidden><a href="admin.html" class="nav-link nav-link-admin">Admin</a></li>
           <li class="nav-mobile-only"><a href="listings.html?filter=saved" class="nav-link">Saved listings <span class="wishlist-count">0</span></a></li>
-          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out</button></li>
+          <li class="nav-mobile-only"><a href="agent-portal.html#list" class="nav-link">List a property <svg class="icon" aria-hidden="true"><use href="icons.svg#i-arrow-right"></use></svg></a></li>
+          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out <svg class="icon" aria-hidden="true"><use href="icons.svg#i-log-out"></use></svg></button></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings" title="Saved listings">
+          <svg class="icon" aria-hidden="true"><use href="icons.svg#i-heart"></use></svg>
           <span class="btn-wishlist-label">Saved</span>
           <span class="wishlist-count">0</span>
         </a>
-        <a href="auth.html" class="btn-primary btn-account" id="nav-account-btn">
-          <span class="btn-icon" aria-hidden="true">👤</span>
-          <span class="btn-label">Sign In</span>
+        <a href="auth.html" class="btn-account" id="nav-account-btn">
+          <span class="btn-icon" aria-hidden="true"><svg class="icon"><use href="icons.svg#i-log-in"></use></svg></span>
+          <span class="btn-label">Sign in</span>
+        </a>
+        <a href="agent-portal.html" class="btn-primary btn-list-property">
+          <svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"></use></svg>
+          <span>List a property</span>
         </a>
         <button type="button" class="menu-toggle" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
-          <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg class="icon icon-open" aria-hidden="true"><use href="icons.svg#i-menu"></use></svg>
+          <svg class="icon icon-close" aria-hidden="true"><use href="icons.svg#i-x"></use></svg>
         </button>
       </div>
     </div>
   </header>
-
   <main id="maincontent" class="auth-page-wrapper">
-    <div class="auth-card">
+    <aside class="auth-aside">
+      <img src="assets/images/country_manor-lg.webp" alt="">
+      <span class="section-tag">DOMA.ng</span>
+      <h2>Rent with confidence, anywhere in Nigeria.</h2>
+      <p>One account for your saved homes, campus-matched hostels and direct chats with verified agents.</p>
+      <ul class="cta-checklist">
+        <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check-circle"></use></svg>Agents checked against CAC and NIN</li>
+        <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check-circle"></use></svg>Hostels matched to your campus and budget</li>
+        <li><svg class="icon" aria-hidden="true"><use href="icons.svg#i-check-circle"></use></svg>Free for students and renters</li>
+      </ul>
+    </aside>
 
-      <!-- Already signed in -->
-      <div id="auth-signed-in-view" class="auth-view" hidden>
-        <div class="auth-heading">
-          <h1>You're signed in</h1>
-          <p>Signed in as <strong id="signed-in-email"></strong>.</p>
+    <div class="auth-main">
+      <div class="auth-card">
+
+        <!-- Already signed in -->
+        <div id="auth-signed-in-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <div class="auth-big-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-user"></use></svg></div>
+            <h1>You're signed in</h1>
+            <p>Signed in as <strong id="signed-in-email"></strong>.</p>
+          </div>
+          <div class="stack-actions">
+            <a href="dashboard.html" class="btn-primary btn-lg btn-block" id="btn-continue">Continue to my account <svg class="icon" aria-hidden="true"><use href="icons.svg#i-arrow-right"></use></svg></a>
+            <button type="button" class="btn-secondary btn-lg btn-block" id="btn-signout-here">Sign out</button>
+          </div>
         </div>
-        <div class="stack-actions">
-          <a href="dashboard.html" class="btn-primary btn-block" id="btn-continue">Continue to my account →</a>
-          <button type="button" class="btn-secondary btn-block" id="btn-signout-here">Sign out</button>
-        </div>
-      </div>
 
-      <!-- Sign in / Create account switch -->
-      <div class="auth-mode-switch" id="auth-mode-switch" role="tablist" aria-label="Account">
-        <button type="button" class="auth-mode-btn active" id="tab-btn-signin" role="tab" aria-selected="true" aria-controls="auth-signin-view">Sign In</button>
-        <button type="button" class="auth-mode-btn" id="tab-btn-signup" role="tab" aria-selected="false" aria-controls="auth-signup-view">Create Account</button>
-      </div>
-
-      <!-- SIGN IN -->
-      <div id="auth-signin-view" class="auth-view" role="tabpanel">
-        <div class="auth-heading">
-          <h1>Welcome back</h1>
-          <p>Sign in to see your campus feed, saved homes, or agent dashboard.</p>
+        <!-- Sign in / Create account switch -->
+        <div class="auth-mode-switch" id="auth-mode-switch" role="tablist" aria-label="Account">
+          <button type="button" class="auth-mode-btn active" id="tab-btn-signin" role="tab" aria-selected="true" aria-controls="auth-signin-view">Sign in</button>
+          <button type="button" class="auth-mode-btn" id="tab-btn-signup" role="tab" aria-selected="false" aria-controls="auth-signup-view">Create account</button>
         </div>
 
-        <form id="signin-form" novalidate>
-          <div class="input-group">
-            <label for="signin-email">Email address</label>
-            <input type="email" id="signin-email" class="input-control" required autocomplete="email" placeholder="you@example.com">
+        <!-- SIGN IN -->
+        <div id="auth-signin-view" class="auth-view" role="tabpanel">
+          <div class="auth-heading">
+            <h1>Welcome back</h1>
+            <p>Sign in to see your campus feed, saved homes or agent dashboard.</p>
           </div>
 
-          <div class="input-group">
-            <div class="label-row">
-              <label for="signin-password">Password</label>
-              <button type="button" class="link-btn" id="link-forgot">Forgot password?</button>
-            </div>
-            <input type="password" id="signin-password" class="input-control" required autocomplete="current-password" placeholder="Your password">
-          </div>
-
-          <div class="form-error" id="signin-error" role="alert" hidden></div>
-
-          <button type="submit" class="btn-primary btn-block btn-lg">Sign In →</button>
-        </form>
-
-        <p class="auth-switch-line">New to DOMA? <button type="button" class="link-btn" id="link-switch-to-signup">Create an account</button></p>
-      </div>
-
-      <!-- FORGOT PASSWORD -->
-      <div id="auth-forgot-view" class="auth-view" hidden>
-        <div class="auth-heading">
-          <h1>Reset your password</h1>
-          <p>Enter your email and we'll send you a link to choose a new password.</p>
-        </div>
-        <form id="forgot-form" novalidate>
-          <div class="input-group">
-            <label for="forgot-email">Email address</label>
-            <input type="email" id="forgot-email" class="input-control" required autocomplete="email">
-          </div>
-          <div class="form-error" id="forgot-error" role="alert" hidden></div>
-          <button type="submit" class="btn-primary btn-block btn-lg">Send reset link</button>
-        </form>
-        <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">← Back to sign in</button></p>
-      </div>
-
-      <!-- SET NEW PASSWORD (arrives here from the email link) -->
-      <div id="auth-reset-view" class="auth-view" hidden>
-        <div class="auth-heading">
-          <h1>Choose a new password</h1>
-          <p>Use at least 8 characters.</p>
-        </div>
-        <form id="reset-form" novalidate>
-          <div class="input-group">
-            <label for="reset-password">New password</label>
-            <input type="password" id="reset-password" class="input-control" required minlength="8" autocomplete="new-password">
-          </div>
-          <div class="form-error" id="reset-error" role="alert" hidden></div>
-          <button type="submit" class="btn-primary btn-block btn-lg">Save new password</button>
-        </form>
-      </div>
-
-      <!-- CHECK YOUR EMAIL -->
-      <div id="auth-check-email-view" class="auth-view" hidden>
-        <div class="auth-heading">
-          <div class="auth-big-icon" aria-hidden="true">✉️</div>
-          <h1>Check your email</h1>
-          <p id="check-email-text">We sent a confirmation link to your inbox. Open it to finish setting up your account.</p>
-        </div>
-        <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">← Back to sign in</button></p>
-      </div>
-
-      <!-- CREATE ACCOUNT -->
-      <div id="auth-signup-view" class="auth-view" role="tabpanel" hidden>
-        <div class="auth-heading">
-          <h1>Create your account</h1>
-          <p>Pick a profile so we can tailor listings, budgets and agent tools to you.</p>
-        </div>
-
-        <fieldset class="role-fieldset">
-          <legend>I am a…</legend>
-          <div class="role-selection-grid">
-            <label class="role-choice-card student">
-              <input type="radio" name="signup-role" value="student" checked>
-              <span class="role-icon" aria-hidden="true">🎓</span>
-              <span class="role-title">Student</span>
-              <span class="role-sub">Campus hostels &amp; &lt; ₦300k</span>
-            </label>
-            <label class="role-choice-card tenant">
-              <input type="radio" name="signup-role" value="tenant">
-              <span class="role-icon" aria-hidden="true">🏠</span>
-              <span class="role-title">Tenant / Family</span>
-              <span class="role-sub">Houses, flats &amp; stores</span>
-            </label>
-            <label class="role-choice-card agent">
-              <input type="radio" name="signup-role" value="agent">
-              <span class="role-icon" aria-hidden="true">💼</span>
-              <span class="role-title">Estate Agent</span>
-              <span class="role-sub">List properties after KYC</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <form id="signup-form" novalidate>
-          <div class="input-group">
-            <label for="signup-fullname">Full name</label>
-            <input type="text" id="signup-fullname" class="input-control" required maxlength="120" autocomplete="name" placeholder="e.g. Chinedu Eze">
-          </div>
-
-          <div class="form-row">
+          <form id="signin-form" novalidate>
             <div class="input-group">
-              <label for="signup-email">Email address</label>
-              <input type="email" id="signup-email" class="input-control" required autocomplete="email" placeholder="name@email.com">
+              <label for="signin-email">Email address</label>
+              <input type="email" id="signin-email" class="input-control" required autocomplete="email" placeholder="you@example.com">
             </div>
+
             <div class="input-group">
-              <label for="signup-phone">WhatsApp / phone</label>
-              <input type="tel" id="signup-phone" class="input-control" required autocomplete="tel" placeholder="+234 803 123 4567">
+              <div class="label-row">
+                <label for="signin-password">Password</label>
+                <button type="button" class="link-btn" id="link-forgot">Forgot password?</button>
+              </div>
+              <input type="password" id="signin-password" class="input-control" required autocomplete="current-password" placeholder="Your password">
             </div>
+
+            <div class="form-error" id="signin-error" role="alert" hidden></div>
+
+            <button type="submit" class="btn-primary btn-block btn-lg">Sign in</button>
+          </form>
+
+          <p class="auth-switch-line">New to DOMA? <button type="button" class="link-btn" id="link-switch-to-signup">Create an account</button></p>
+        </div>
+
+        <!-- FORGOT PASSWORD -->
+        <div id="auth-forgot-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <div class="auth-big-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lock"></use></svg></div>
+            <h1>Reset your password</h1>
+            <p>Enter your email and we'll send you a link to choose a new password.</p>
+          </div>
+          <form id="forgot-form" novalidate>
+            <div class="input-group">
+              <label for="forgot-email">Email address</label>
+              <input type="email" id="forgot-email" class="input-control" required autocomplete="email">
+            </div>
+            <div class="form-error" id="forgot-error" role="alert" hidden></div>
+            <button type="submit" class="btn-primary btn-block btn-lg">Send reset link</button>
+          </form>
+          <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">Back to sign in</button></p>
+        </div>
+
+        <!-- SET NEW PASSWORD (arrives here from the email link) -->
+        <div id="auth-reset-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <div class="auth-big-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-lock"></use></svg></div>
+            <h1>Choose a new password</h1>
+            <p>Use at least 8 characters.</p>
+          </div>
+          <form id="reset-form" novalidate>
+            <div class="input-group">
+              <label for="reset-password">New password</label>
+              <input type="password" id="reset-password" class="input-control" required minlength="8" autocomplete="new-password">
+            </div>
+            <div class="form-error" id="reset-error" role="alert" hidden></div>
+            <button type="submit" class="btn-primary btn-block btn-lg">Save new password</button>
+          </form>
+        </div>
+
+        <!-- CHECK YOUR EMAIL -->
+        <div id="auth-check-email-view" class="auth-view" hidden>
+          <div class="auth-heading">
+            <div class="auth-big-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-mail"></use></svg></div>
+            <h1>Check your email</h1>
+            <p id="check-email-text">We sent a confirmation link to your inbox. Open it to finish setting up your account.</p>
+          </div>
+          <p class="auth-switch-line"><button type="button" class="link-btn" data-show="signin">Back to sign in</button></p>
+        </div>
+
+        <!-- CREATE ACCOUNT -->
+        <div id="auth-signup-view" class="auth-view" role="tabpanel" hidden>
+          <div class="auth-heading">
+            <h1>Create your account</h1>
+            <p>Pick a profile so we can tailor listings, budgets and agent tools to you.</p>
           </div>
 
-          <!-- Student -->
-          <div class="role-fields student" data-role-fields="student">
-            <div class="role-fields-title">🎓 Your campus</div>
-            <div class="input-group">
-              <label for="signup-university">University / institution</label>
-              <select id="signup-university" class="input-control">
-                <option value="UNILAG (Akoka)">University of Lagos (UNILAG), Akoka</option>
-                <option value="LASU (Ojo)">Lagos State University (LASU), Ojo</option>
-                <option value="UI (Ibadan)">University of Ibadan (UI), Agbowo</option>
-                <option value="UNIPORT (Choba)">University of Port Harcourt (UNIPORT), Choba</option>
-                <option value="YabaTech">Yaba College of Technology (Yaba)</option>
-                <option value="FUTA (Akure)">Federal Univ. of Tech Akure (FUTA)</option>
-                <option value="OAU (Ile-Ife)">Obafemi Awolowo University (OAU)</option>
-                <option value="Other Institution">Other Nigerian institution</option>
-              </select>
+          <fieldset class="role-fieldset">
+            <legend>I am a…</legend>
+            <div class="role-selection-grid">
+              <label class="role-choice-card">
+                <input type="radio" name="signup-role" value="student" checked>
+                <span class="role-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-cap"></use></svg></span>
+                <span class="role-title">Student</span>
+                <span class="role-sub">Hostels near campus</span>
+              </label>
+              <label class="role-choice-card">
+                <input type="radio" name="signup-role" value="tenant">
+                <span class="role-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-home"></use></svg></span>
+                <span class="role-title">Tenant</span>
+                <span class="role-sub">Houses, flats &amp; stores</span>
+              </label>
+              <label class="role-choice-card">
+                <input type="radio" name="signup-role" value="agent">
+                <span class="role-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-briefcase"></use></svg></span>
+                <span class="role-title">Agent</span>
+                <span class="role-sub">List after KYC</span>
+              </label>
             </div>
+          </fieldset>
+
+          <form id="signup-form" novalidate>
+            <div class="input-group">
+              <label for="signup-fullname">Full name</label>
+              <input type="text" id="signup-fullname" class="input-control" required maxlength="120" autocomplete="name" placeholder="e.g. Chinedu Eze">
+            </div>
+
             <div class="form-row">
               <div class="input-group">
-                <label for="signup-student-budget">Yearly budget (₦)</label>
-                <input type="number" id="signup-student-budget" class="input-control" min="0" step="1000" inputmode="numeric" value="250000">
+                <label for="signup-email">Email address</label>
+                <input type="email" id="signup-email" class="input-control" required autocomplete="email" placeholder="name@email.com">
               </div>
               <div class="input-group">
-                <label for="signup-student-roomtype">Preferred room</label>
-                <select id="signup-student-roomtype" class="input-control">
-                  <option value="Self-Contain Ensuite">Self-contain ensuite</option>
-                  <option value="Single Room Bedspace">Single room bedspace</option>
-                  <option value="Room and Parlour">Room &amp; parlour</option>
-                  <option value="Shared Flat">Shared student flat</option>
-                </select>
+                <label for="signup-phone">WhatsApp / phone</label>
+                <input type="tel" id="signup-phone" class="input-control" required autocomplete="tel" placeholder="+234 803 123 4567">
               </div>
             </div>
-          </div>
 
-          <!-- Tenant -->
-          <div class="role-fields tenant" data-role-fields="tenant" hidden>
-            <div class="role-fields-title">🏠 Where you want to live</div>
-            <div class="form-row">
+            <!-- Student -->
+            <div class="role-fields" data-role-fields="student">
+              <div class="role-fields-title"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-cap"></use></svg>Your campus</div>
               <div class="input-group">
-                <label for="signup-tenant-state">State</label>
-                <select id="signup-tenant-state" class="input-control">
-                  <option value="Lagos">Lagos</option>
-                  <option value="Abuja">Abuja (FCT)</option>
-                  <option value="Rivers">Rivers (Port Harcourt)</option>
-                  <option value="Oyo">Oyo (Ibadan)</option>
-                  <option value="Ogun">Ogun</option>
+                <label for="signup-university">University / institution</label>
+                <select id="signup-university" class="input-control" data-options="university">
+                  <option value="Other Institution" data-position="end">Other Nigerian institution</option>
                 </select>
               </div>
-              <div class="input-group">
-                <label for="signup-tenant-area">Neighbourhood</label>
-                <input type="text" id="signup-tenant-area" class="input-control" maxlength="80" placeholder="e.g. Lekki Phase 1">
+              <div class="form-row">
+                <div class="input-group">
+                  <label for="signup-student-budget">Yearly budget (₦)</label>
+                  <input type="number" id="signup-student-budget" class="input-control" min="0" step="1000" inputmode="numeric" value="250000">
+                </div>
+                <div class="input-group">
+                  <label for="signup-student-roomtype">Preferred room</label>
+                  <select id="signup-student-roomtype" class="input-control">
+                    <option value="Self-Contain Ensuite">Self-contain ensuite</option>
+                    <option value="Single Room Bedspace">Single room bedspace</option>
+                    <option value="Room and Parlour">Room &amp; parlour</option>
+                    <option value="Shared Flat">Shared student flat</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Agent -->
-          <div class="role-fields agent" data-role-fields="agent" hidden>
-            <div class="role-fields-title">💼 Agent accreditation</div>
-            <p class="role-fields-note">After signing up you'll submit your CAC number and NIN. You can publish listings once our compliance team approves them.</p>
+            <!-- Tenant -->
+            <div class="role-fields" data-role-fields="tenant" hidden>
+              <div class="role-fields-title"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-pin"></use></svg>Where you want to live</div>
+              <div class="form-row">
+                <div class="input-group">
+                  <label for="signup-tenant-state">State</label>
+                  <select id="signup-tenant-state" class="input-control" data-options="states">
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="signup-tenant-area">Neighbourhood</label>
+                  <input type="text" id="signup-tenant-area" class="input-control" maxlength="80" placeholder="e.g. Lekki Phase 1">
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent -->
+            <div class="role-fields" data-role-fields="agent" hidden>
+              <div class="role-fields-title"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-shield"></use></svg>Agent accreditation</div>
+              <p class="role-fields-note">After signing up you'll submit your CAC number and NIN. You can publish listings once our compliance team approves them.</p>
+              <div class="input-group">
+                <label for="signup-agent-agency">Agency / business name</label>
+                <input type="text" id="signup-agent-agency" class="input-control" maxlength="120" placeholder="e.g. Prime Sanctuary Realtors Ltd">
+              </div>
+            </div>
+
             <div class="input-group">
-              <label for="signup-agent-agency">Agency / business name</label>
-              <input type="text" id="signup-agent-agency" class="input-control" maxlength="120" placeholder="e.g. Prime Sanctuary Realtors Ltd">
+              <label for="signup-password">Password</label>
+              <input type="password" id="signup-password" class="input-control" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
             </div>
-          </div>
 
-          <div class="input-group">
-            <label for="signup-password">Password</label>
-            <input type="password" id="signup-password" class="input-control" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
-          </div>
+            <div class="form-error" id="signup-error" role="alert" hidden></div>
 
-          <div class="form-error" id="signup-error" role="alert" hidden></div>
+            <button type="submit" class="btn-primary btn-block btn-lg">Create account</button>
+          </form>
 
-          <button type="submit" class="btn-primary btn-block btn-lg">Create Account →</button>
-        </form>
-
-        <p class="auth-switch-line">Already have an account? <button type="button" class="link-btn" id="link-switch-to-signin">Sign in</button></p>
+          <p class="auth-switch-line">Already have an account? <button type="button" class="link-btn" id="link-switch-to-signin">Sign in</button></p>
+        </div>
       </div>
     </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-bottom">
-        <div>&copy; 2026 DOMA Nigeria. All rights reserved.</div>
-        <div>Always inspect a property in person before paying any money.</div>
-      </div>
-    </div>
-  </footer>
-
+  <!-- ui.js first: the header, menu and toasts work before the Supabase SDK finishes downloading -->
+  <script src="ui.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.js" integrity="sha256-JOjADcJdpCDudBBotgvNtfYss1mNiDQFis837G7hpyQ=" crossorigin="anonymous"></script>
   <script src="config.js"></script>
-  <script src="ui.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const views = {

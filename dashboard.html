@@ -18,39 +18,42 @@
   <header class="site-header" id="main-header">
     <div class="container nav-container">
       <a href="index.html" class="brand-logo" aria-label="DOMA home">
-        <span class="brand-symbol" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </span>
+        <span class="brand-symbol" aria-hidden="true"><svg class="icon"><use href="icons.svg#i-home"></use></svg></span>
         <span class="brand-name">DOMA<span>.ng</span></span>
       </a>
 
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <ul class="nav-links">
           <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="listings.html" class="nav-link">Houses &amp; Stores</a></li>
-          <li><a href="agent-portal.html" class="nav-link">Agent Portal</a></li>
+          <li><a href="listings.html" class="nav-link">Browse homes</a></li>
+          <li><a href="agent-portal.html" class="nav-link">For agents</a></li>
+          <li><a href="valuation.html" class="nav-link">Rent check</a></li>
           <li><a href="payment.html" class="nav-link">Payments</a></li>
-          <li><a href="valuation.html" class="nav-link">Valuation</a></li>
-          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My Dashboard</a></li>
+          <li id="nav-dash-item" hidden><a href="dashboard.html" class="nav-link">My dashboard</a></li>
           <li id="nav-admin-item" hidden><a href="admin.html" class="nav-link nav-link-admin">Admin</a></li>
           <li class="nav-mobile-only"><a href="listings.html?filter=saved" class="nav-link">Saved listings <span class="wishlist-count">0</span></a></li>
-          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out</button></li>
+          <li class="nav-mobile-only"><a href="agent-portal.html#list" class="nav-link">List a property <svg class="icon" aria-hidden="true"><use href="icons.svg#i-arrow-right"></use></svg></a></li>
+          <li id="nav-signout-item" class="nav-mobile-only" hidden><button type="button" class="nav-link nav-signout" id="nav-signout-btn">Sign out <svg class="icon" aria-hidden="true"><use href="icons.svg#i-log-out"></use></svg></button></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <a href="listings.html?filter=saved" class="btn-wishlist" aria-label="Saved listings" title="Saved listings">
+          <svg class="icon" aria-hidden="true"><use href="icons.svg#i-heart"></use></svg>
           <span class="btn-wishlist-label">Saved</span>
           <span class="wishlist-count">0</span>
         </a>
-        <a href="auth.html" class="btn-primary btn-account" id="nav-account-btn">
-          <span class="btn-icon" aria-hidden="true">👤</span>
-          <span class="btn-label">Sign In</span>
+        <a href="auth.html" class="btn-account" id="nav-account-btn">
+          <span class="btn-icon" aria-hidden="true"><svg class="icon"><use href="icons.svg#i-log-in"></use></svg></span>
+          <span class="btn-label">Sign in</span>
+        </a>
+        <a href="agent-portal.html" class="btn-primary btn-list-property">
+          <svg class="icon" aria-hidden="true"><use href="icons.svg#i-plus"></use></svg>
+          <span>List a property</span>
         </a>
         <button type="button" class="menu-toggle" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
-          <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg class="icon icon-open" aria-hidden="true"><use href="icons.svg#i-menu"></use></svg>
+          <svg class="icon icon-close" aria-hidden="true"><use href="icons.svg#i-x"></use></svg>
         </button>
       </div>
     </div>
@@ -71,8 +74,8 @@
               <p id="dash-user-subtitle" class="dashboard-subtitle"></p>
             </div>
             <div class="dashboard-header-actions">
-              <a href="listings.html" class="btn-primary">🔍 Browse listings</a>
-              <button type="button" class="btn-secondary btn-danger-outline" id="btn-dash-logout">Sign out</button>
+              <a href="listings.html" class="btn-primary"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-search"></use></svg>Browse listings</a>
+              <button type="button" class="btn-secondary btn-danger-outline" id="btn-dash-logout"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-log-out"></use></svg>Sign out</button>
             </div>
           </div>
           <div class="info-summary-grid" id="dash-info-grid"></div>
@@ -93,7 +96,7 @@
         <!-- Saved -->
         <section class="dash-section" id="saved" aria-labelledby="saved-title">
           <div class="dash-section-head">
-            <h2 id="saved-title">❤️ Saved properties</h2>
+            <h2 id="saved-title"><svg class="icon" aria-hidden="true"><use href="icons.svg#i-heart"></use></svg>Saved properties</h2>
             <span id="saved-count-pill" class="muted-pill">0 saved</span>
           </div>
           <div id="saved-wishlist-grid" class="tile-grid"></div>
@@ -107,12 +110,10 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a href="index.html" class="brand-logo" aria-label="DOMA home">
-            <span class="brand-symbol" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </span>
+            <span class="brand-symbol" aria-hidden="true"><svg class="icon"><use href="icons.svg#i-home"></use></svg></span>
             <span class="brand-name">DOMA<span>.ng</span></span>
           </a>
-          <p>Houses, student hostels and stores to let across Nigeria, listed by KYC-checked agents.</p>
+          <p>Houses, student hostels and stores to let across Nigeria, listed by agents whose CAC and NIN we have checked.</p>
         </div>
 
         <div class="footer-col">
@@ -135,11 +136,12 @@
         </div>
 
         <div class="footer-col">
-          <h5>Account</h5>
+          <h5>Tools</h5>
           <ul class="footer-links">
-            <li><a href="auth.html">Sign in</a></li>
-            <li><a href="dashboard.html">My dashboard</a></li>
+            <li><a href="valuation.html">Rent check</a></li>
+            <li><a href="valuation.html#move-in">Move-in cost calculator</a></li>
             <li><a href="listings.html?filter=saved">Saved listings</a></li>
+            <li><a href="dashboard.html">My dashboard</a></li>
           </ul>
         </div>
 
@@ -159,18 +161,19 @@
       </div>
     </div>
   </footer>
+  <!-- ui.js first: the header, menu and toasts work before the Supabase SDK finishes downloading -->
+  <script src="ui.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.js" integrity="sha256-JOjADcJdpCDudBBotgvNtfYss1mNiDQFis837G7hpyQ=" crossorigin="anonymous"></script>
   <script src="config.js"></script>
-  <script src="ui.js"></script>
   <script>
     let currentUser = null;
     let allListings = [];
 
     const ROLE_META = {
-      student: { theme: 'student-theme', badge: '🎓 Student', feedTag: '🎓 Campus matches' },
-      tenant: { theme: 'tenant-theme', badge: '🏠 Tenant', feedTag: '🏠 Curated for you' },
-      agent: { theme: '', badge: '💼 Agent', feedTag: '💼 Live marketplace' },
-      admin: { theme: '', badge: '🛡️ Admin', feedTag: '💼 Live marketplace' }
+      student: { theme: 'student-theme', icon: 'cap', badge: 'Student', feedTag: 'Campus matches' },
+      tenant: { theme: 'tenant-theme', icon: 'home', badge: 'Tenant', feedTag: 'Curated for you' },
+      agent: { theme: '', icon: 'briefcase', badge: 'Agent', feedTag: 'Live marketplace' },
+      admin: { theme: '', icon: 'shield', badge: 'Admin', feedTag: 'Live marketplace' }
     };
 
     const naira = (n) => `₦${Number(n).toLocaleString()}`;
@@ -213,7 +216,7 @@
       document.getElementById('dash-user-name').textContent = `Welcome back, ${firstName}`;
       const roleBadge = document.getElementById('dash-role-badge');
       roleBadge.className = `profile-pill-badge ${currentUser.role}`;
-      roleBadge.textContent = meta.badge;
+      roleBadge.innerHTML = icon(meta.icon) + meta.badge;
       document.getElementById('feed-tag').textContent = meta.feedTag;
 
       const subtitle = document.getElementById('dash-user-subtitle');
@@ -268,7 +271,7 @@
       const isStudent = item.type === 'student';
       const isBudget = (item.price || 0) <= 300000;
       const media = item.media && item.media[0];
-      const imgUrl = safeMediaUrl(media && media.type !== 'video' ? media.url : '', 'assets/images/hero_budget_selfcon.jpg');
+      const imgUrl = safeMediaUrl(media && media.type !== 'video' ? cardImage(media.url) : '', 'assets/images/hero_budget_selfcon-sm.webp');
       const cleanPhone = (item.agentPhone || '').replace(/[^0-9]/g, '');
       const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello, I saw your listing on DOMA: "${item.title}" (${item.priceFormatted}) in ${item.area}, ${item.state}. I would like to inspect it.`)}`;
 
@@ -277,17 +280,17 @@
           <div class="listing-tile-media">
             <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">
             <div class="listing-tile-badges">
-              ${isStudent ? '<span class="card-badge student">🎓 Student</span>' : (item.type === 'store' ? '<span class="card-badge gold">🏪 Store</span>' : '<span class="card-badge">🏠 House</span>')}
-              ${isBudget ? '<span class="card-badge budget">💰 &lt; ₦300k</span>' : ''}
+              ${typeBadgeHtml(item.type, true)}
+              ${isBudget ? `<span class="card-badge budget">${icon('tag')}Under ₦300k</span>` : ''}
             </div>
           </div>
           <div class="listing-tile-body">
             <div class="listing-tile-price">${escapeHtml(item.priceFormatted)} <span>${escapeHtml(item.period || '')}</span></div>
             <h3 class="listing-tile-title">${escapeHtml(item.title)}</h3>
-            ${item.campus && item.campus !== 'none' ? `<div class="card-campus-pill">🎓 ${escapeHtml(item.campusDist || 'Near campus')} • ${escapeHtml(item.campus)}</div>` : ''}
-            <p class="listing-tile-loc">📍 ${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
+            ${item.campus && item.campus !== 'none' ? `<div class="card-campus-pill">${icon('cap')}<span>${escapeHtml(item.campusDist || 'Near campus')} · ${escapeHtml(item.campus)}</span></div>` : ''}
+            <p class="listing-tile-loc">${icon('pin')}${escapeHtml(item.area)}, ${escapeHtml(item.state)}</p>
             <div class="listing-tile-actions">
-              <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">WhatsApp agent</a>
+              <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">${icon('message')}WhatsApp</a>
               ${removable
                 ? `<button type="button" class="btn-secondary btn-sm" data-remove-id="${escapeHtml(item.id)}">Remove</button>`
                 : '<a href="listings.html" class="btn-secondary btn-sm">View on map</a>'}

@@ -8,8 +8,8 @@
  */
 
 const DOMA_CONFIG = Object.freeze({
-  supabaseUrl: 'https://uwbbdwydadolmoffmwky.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3YmJkd3lkYWRvbG1vZmZtd2t5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDQwODcsImV4cCI6MjEwODAyMDA4N30.TzHBgqVz68-_h8ePF6-qkf6u1BfsJC9UwEfWD-MbyuA',
+  supabaseUrl: 'https://woodsdwveicynllmxbnn.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvb2RzZHd2ZWljeW5sbG14Ym5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzk5MDYsImV4cCI6MjA5MDcxNTkwNn0.PEfmjh_OXd82l0a6R3uP8Wx-loZISLHQ0SWbuZZvfMg',
   // Use a *signed* or tightly restricted upload preset in production.
   cloudinaryCloudName: '',
   cloudinaryUploadPreset: ''
@@ -303,18 +303,26 @@ class DomaCloudService {
   // ==========================================
   // LISTINGS
   // ==========================================
-  /** Active listings, newest first. Returns null if the database could not be reached. */
-  async getListings() {
+  /**
+   * Active listings, newest first. Returns null if the database could not be
+   * reached within `timeoutMs`, so pages can fall back instead of hanging.
+   */
+  async getListings(timeoutMs = 10000) {
     if (!this.supabaseClient) return null;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const { data, error } = await this.supabaseClient
         .from('listings')
         .select('*')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .abortSignal(controller.signal);
+      clearTimeout(timer);
       if (error) throw error;
       return data.map(mapListing);
     } catch (e) {
+      clearTimeout(timer);
       console.warn('Supabase getListings error:', e);
       return null;
     }
